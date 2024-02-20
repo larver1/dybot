@@ -15,5 +15,11 @@
   "bugs": {
     "url": "https://github.com/oliverkeen15/dybot/issues"
   },
-  "homepage": "https://github.com/oliverkeen15/dybot#readme"
+  "homepage": "https://github.com/oliverkeen15/dybot#readme",
+  "dependencies": {
+    "discord-hybrid-sharding": "^2.1.4",
+    "discord.js": "^14.14.1",
+    "mysql2": "^3.9.1",
+    "sequelize": "^6.37.1"
+  }
 }
