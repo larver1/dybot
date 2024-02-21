@@ -43,7 +43,7 @@ require('../Database/Models/Orders.js')(sequelize, Sequelize.DataTypes);
 require('../Database/Models/UserCoupons.js')(sequelize, Sequelize.DataTypes);
 require('../Database/Models/Users.js')(sequelize, Sequelize.DataTypes);
 
-const force = false;
+const force = true;
 
 // Syncs up the DB when new items have been added to CurrencyShop, or new commands have been added
 sequelize.sync({ force }).then(async () => {

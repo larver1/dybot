@@ -1,0 +1,74 @@
+[
+    {
+        "name": "Small 5%",
+        "cost": 1,
+        "description": "Get a 5% discount off a Small Batch of icons.",
+        "emoji": "🎟️",
+        "size": "small",
+        "discount": 5
+    },
+    {
+        "name": "Small 10%",
+        "cost": 1,
+        "description": "Get a 10% discount off a Small Batch of icons.",
+        "emoji": "🎟️",
+        "size": "small",
+        "discount": 10
+    },
+    {
+        "name": "Small 20%",
+        "cost": 1,
+        "description": "Get a 20% discount off a Small Batch of icons.",
+        "emoji": "🎟️",
+        "size": "small",
+        "discount": 20
+    },
+    {
+        "name": "Medium 5%",
+        "cost": 1,
+        "description": "Get a 5% discount off a Medium Batch of icons.",
+        "emoji": "🎟️",
+        "size": "medium",
+        "discount": 5
+    },
+    {
+        "name": "Medium 10%",
+        "cost": 1,
+        "description": "Get a 10% discount off a Medium Batch of icons.",
+        "emoji": "🎟️",
+        "size": "medium",
+        "discount": 10
+    },
+    {
+        "name": "Medium 20%",
+        "cost": 1,
+        "description": "Get a 20% discount off a Medium Batch of icons.",
+        "emoji": "🎟️",
+        "size": "medium",
+        "discount": 20
+    },
+    {
+        "name": "Large 5%",
+        "cost": 1,
+        "description": "Get a 5% discount off a Large Batch of icons.",
+        "emoji": "🎟️",
+        "size": "large",
+        "discount": 5
+    },
+    {
+        "name": "Large 10%",
+        "cost": 1,
+        "description": "Get a 10% discount off a Large Batch of icons.",
+        "emoji": "🎟️",
+        "size": "large",
+        "discount": 10
+    },
+    {
+        "name": "Large 20%",
+        "cost": 1,
+        "description": "Get a 20% discount off a Large Batch of icons.",
+        "emoji": "🎟️",
+        "size": "large",
+        "discount": 20
+    }
+]

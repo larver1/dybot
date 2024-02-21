@@ -16,6 +16,9 @@ module.exports = (sequelize, DataTypes) => {
 		// In-game cost of the item
 		cost: {
 			type: DataTypes.INTEGER,
+			get() {
+				return `💰${this.getDataValue('cost').toLocaleString('en-US', { style: 'decimal' })}`;
+			},
 			allowNull: false,
 		},
 		// Brief summary of coupon's function
@@ -30,11 +33,12 @@ module.exports = (sequelize, DataTypes) => {
 		},
         // Size of coupon
         size: {
-			type: DataTypes.INTEGER,
+			type: DataTypes.ENUM('small', 'medium', 'large'),
 			allowNull: false,
+			defaultValue: 'small'
         },
         // Discount of coupon
-        size: {
+        discount: {
             type: DataTypes.INTEGER,
             allowNull: false,
         },

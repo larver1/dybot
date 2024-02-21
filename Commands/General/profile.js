@@ -18,10 +18,37 @@ module.exports = {
 	 */
 	async execute(interaction) {
 
-		const user = await DbUser.findUser(interaction.user.id);
-		if(user) return interaction.editReply({ content: 'You have already created a profile!' }).catch(e => console.log(e));
+		let hasCreatedProfile = false;
 
-		await DbUser.createUser(interaction.user.id, CustomEmbed.getTag(interaction.user.tag));
-		return interaction.editReply({ content: `Your profile has successfully been created!` }).catch(e => console.log(e));
+		// Try to find user info
+		let user = await DbUser.findUser(interaction.user.id);
+		
+		// If no user profile yet, create one
+		if(user) hasCreatedProfile = true; 
+		else user = await DbUser.createUser(interaction.user.id, CustomEmbed.getTag(interaction.user.tag));
+
+		// If still no user even after creating it, something is wrong
+		if(!user) throw new Error('No user found!');
+
+		// Build profile embed
+		const profileEmbed = new CustomEmbed(interaction)
+			.setTitle(`${user.tag}'s Profile!`)
+			.setDescription(`DyDots: ${user.balance}`)
+			.setThumbnail(interaction.user.displayAvatarURL())
+
+		// Build coupons embed
+		const couponsMsg = await user.displayCoupons();
+		const couponsEmbed = new CustomEmbed(interaction)
+			.setTitle(`${user.tag}'s Coupons!`)
+			.setDescription(couponsMsg)
+
+		// await user.addCouponByID(1, 1);
+		// await user.addCouponByID(4, 1);
+		// await user.addCouponByID(7, 1);
+
+		// Display it
+		return interaction.editReply({ 
+			content: hasCreatedProfile ? ' ' : `Your profile has successfully been created!`,
+			embeds: [profileEmbed, couponsEmbed] }).catch(e => console.log(e));
 	}
 }
