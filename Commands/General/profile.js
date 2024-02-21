@@ -47,8 +47,7 @@ module.exports = {
 		// await user.addCouponByID(7, 1);
 
 		// Display it
-		return interaction.editReply({ 
-			content: hasCreatedProfile ? ' ' : `Your profile has successfully been created!`,
-			embeds: [profileEmbed, couponsEmbed] }).catch(e => console.log(e));
+		await interaction.editReply({ embeds: [profileEmbed, couponsEmbed] }).catch(e => console.log(e));
+		if(!hasCreatedProfile) await interaction.followUp(`${interaction.user}, your profile has successfully been created!`).catch(e => console.log(e));
 	}
 }
