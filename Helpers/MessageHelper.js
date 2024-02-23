@@ -39,7 +39,12 @@ module.exports = class MessageHelper {
 					.setTitle(`Are you sure you want to order x${data.amount} ${data.type} Emotes?`)
 					.setDescription(`The total cost of this order will be\n## ${discountMsg ? discountMsg : ""}${discountCost.toFixed(2)}€\n${data.coupon ? `__You applied a ${data.coupon.emoji} ${data.coupon.name} coupon.__` : ``}`)
 				break;
-            default:
+			case "leaderboard":
+				warning = new CustomEmbed(interaction)
+				.setTitle(`Do you want to be shown on the leaderboard?`)
+				.setDescription(`This will mean that any user who uses DyBot could see your username. Is this okay?\n\nYou can change this option at any time using \`/leaderboard visible\``)
+				break;
+			default:
                 throw new Error('No valid type passed in warn message.');
         }
 

@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const CustomEmbed = require('../../Helpers/CustomEmbed.js');
+const MessageHelper = require('../../Helpers/MessageHelper.js');
 const DbUser = require('../../Helpers/DbUser.js');
 
 /**
@@ -19,31 +20,48 @@ module.exports = {
 	async execute(interaction) {
 
 		let hasCreatedProfile = false;
+		let newProfileMessage = ``;
 
 		// Try to find user info
-		let user = await DbUser.findUser(interaction.user.id);
-		
+		let user = await DbUser.findUser(interaction.user.id);	
 		// If no user profile yet, create one
 		if(user) hasCreatedProfile = true; 
-		else user = await DbUser.createUser(interaction.user.id, CustomEmbed.getTag(interaction.user.tag));
-
-		// If still no user even after creating it, something is wrong
-		if(!user) throw new Error('No user found!');
-
+		
+		// If just created profile, ask if they want to be on global leaderboard
+		if(!hasCreatedProfile) {
+			const warnCollector = await MessageHelper.warnMessage(interaction, "leaderboard");
+			warnCollector.on('confirmed', async i => {
+				user = await DbUser.createUser(interaction.user.id, true);
+				newProfileMessage = `You have chosen to be visible on the \`/leaderboard\`. You may change this at any time using \`/leaderboard visible\`.`;
+				await this.viewProfile(interaction, user, newProfileMessage);
+			});
+	
+			warnCollector.on('declined', async i => {
+				user = await DbUser.createUser(interaction.user.id, false);
+				newProfileMessage = `You have chosen to be hidden from the \`/leaderboard\`. You may change this at any time using \`/leaderboard visible\`.`;
+				await this.viewProfile(interaction, user, newProfileMessage);
+			});
+		} else {
+			// If still no user even after creating it, something is wrong
+			if(!user) throw new Error('No user found!');
+			await this.viewProfile(interaction, user);
+		}
+	},
+	async viewProfile(interaction, user, newProfileMessage) {
 		// Build profile embed
 		const profileEmbed = new CustomEmbed(interaction)
-			.setTitle(`${user.tag}'s Profile!`)
+			.setTitle(`${interaction.user.tag}'s Profile!`)
 			.setDescription(`DyDots: ${user.balance}`)
 			.setThumbnail(interaction.user.displayAvatarURL())
 
 		// Build coupons embed
 		const couponsMsg = await user.displayCoupons();
 		const couponsEmbed = new CustomEmbed(interaction)
-			.setTitle(`${user.tag}'s Coupons!`)
+			.setTitle(`${interaction.user.tag}'s Coupons!`)
 			.setDescription(couponsMsg)
 
 		// Display it
 		await interaction.editReply({ embeds: [profileEmbed, couponsEmbed] }).catch(e => console.log(e));
-		if(!hasCreatedProfile) await interaction.followUp(`${interaction.user}, your profile has successfully been created!`).catch(e => console.log(e));
+		if(newProfileMessage) await interaction.followUp(`${interaction.user}, your profile has successfully been created!\n\n${newProfileMessage}`).catch(e => console.log(e));
 	}
 }

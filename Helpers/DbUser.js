@@ -18,14 +18,23 @@ module.exports = class DbUser {
     /**
 	 * Creates a user with the given ID and tag
 	 * @param {string} id - User's discord ID.
-	 * @param {string} tag - User's discord tag
+	 * @param {Boolean} leaderboard - Whether user wishes to be shown on the leaderboard
 	 */
-    static async createUser(id, tag) {
+    static async createUser(id, leaderboard) {
         const user = await Users.create({
             user_id: id,
             balance: 100,
-            tag: tag
+            leaderboard: leaderboard
         });
         return user;
+    }
+
+    /**
+     * Fetch all users in order of balance
+     */
+    static async getTopUsers() {
+        return Users.findAll({ 
+            order: [['balance', 'DESC']],
+        });
     }
 }
