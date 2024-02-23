@@ -10,16 +10,17 @@ module.exports = class CustomEmbed extends EmbedBuilder {
 	 * @constructor
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
 	 */
-	constructor(interaction) {		
+	constructor(interaction, user) {		
 		super();
 
 		// Get username
-		const newTag = CustomEmbed.getTag(interaction.user.tag);
+		const displayUser = user ? user : interaction.user;
+		const newTag = CustomEmbed.getTag(displayUser.tag);
 		this.setTimestamp();
 
 		// Display bot name, username, and their icon
 		this.setFooter({ text: 'DyBot' });
-		this.setAuthor({ name: `${newTag}`, iconURL: `${interaction.user.displayAvatarURL()}` });
+		this.setAuthor({ name: `${newTag}`, iconURL: `${displayUser.displayAvatarURL()}` });
 		this.setColor('Green');
 	}
 

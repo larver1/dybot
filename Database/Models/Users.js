@@ -103,7 +103,10 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 			where: { user_id: this.user_id, coupon_id: coupon.coupon_id },
 		});
 
-		if (userCoupon && userCoupon.amount > 0) {
+		if(freq <= 0 || userCoupon.amount <= 0) 
+			throw new Error(`Cannot remove ${freq} coupons when user has ${userCoupon.amount}.`);
+		
+		if (userCoupon) {
 			if(!freq) userCoupon.amount -= 1;
 			else userCoupon.amount -= freq;
 			return userCoupon.save();
@@ -130,11 +133,12 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 	/**
 	 * Gets all of the user's coupons
 	 */
-	Users.prototype.getCoupons = function() {
-		return UserCoupons.findAll({
+	Users.prototype.getCoupons = async function() {
+		const coupons = await UserCoupons.findAll({
 			where: { user_id: this.user_id },
 			include: ['coupon'],
 		});
+		return coupons.filter(coupon => coupon.amount > 0)
 	};
 
 	/**
@@ -142,7 +146,7 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 	 */
 	Users.prototype.getCouponsOfValue = async function(value) {
 		const allCoupons = await this.getCoupons();
-		return allCoupons.filter(userCoupon => userCoupon.coupon.value <= value && userCoupon.amount > 0);
+		return allCoupons.filter(userCoupon => userCoupon.coupon.value == value && userCoupon.amount > 0);
 	};
 
 	/**

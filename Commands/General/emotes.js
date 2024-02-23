@@ -118,7 +118,19 @@ module.exports = {
         });
     },
     /**
-     * Displays all types of emotes someone can order
+     * Checks value of order and verifies which coupons would be applicable
+     * @param {Integer} value - The value of the order
+     */
+    async checkOrderValue(value) {
+        const coupons = await Coupons.findAll();
+        const sortedCoupons = coupons.sort((a, b) => b.value - a.value);
+        for(let i = 0; i < sortedCoupons.length; i++) {
+            const coupon = sortedCoupons[i];
+            if(value > coupon.value) return coupon.value;
+        }
+    },
+    /**
+     * Allows user to order
      * @param {CommandInteraction} interaction - User's interaction with the bot
      * @param {string} type - The type of emote being ordered
      * @param {Integer} amount - The number of emotes being ordered
@@ -126,17 +138,20 @@ module.exports = {
     async order(interaction, type, amount) {
         
         const orderAmount = parseInt(amount);
-        const orderType = orderTypes.find(order => order.value == type);
-        const orderPrice = orderType.prices.find(prices => prices.size == orderAmount);
+		const orderType = DbOrder.getOrderData(type);
+		const orderPrice = DbOrder.getOrderPrice(orderType, orderAmount);
         const orderCost = orderPrice.cost;
 
         const user = await DbUser.findUser(interaction.user.id);
         if(!user) throw new Error(`No user is found with ID ${interaction.user.id}`);
 
-        const availableCoupons = await user.getCouponsOfValue(orderCost);
+        // Check if user has any applicable and ask if they want to use one
+        const orderValue = await this.checkOrderValue(orderCost);
+        const availableCoupons = await user.getCouponsOfValue(orderValue);
         if(availableCoupons.length) {
             const selectId = uuidv4();
             const cancelId = uuidv4();
+            let selectedCoupon;
             
             const couponEmbed = new CustomEmbed(interaction)
             .setTitle(`Would you like to apply a Coupon to save money off your order?`)
@@ -163,34 +178,43 @@ module.exports = {
             
             collector.on('collect', async i => {
                 await i.deferUpdate().catch(e => {console.log(e)});
-                switch(i.customId) {
-                    case selectId:
-                        await user.removeCoupon()
-                } 
+                if(i.customId == selectId) selectedCoupon = availableCoupons[parseInt(i.values)];
+                await this.confirmOrder(interaction, user, orderType, orderAmount, orderCost, selectedCoupon);    
+            });
+
+            collector.on('end', async collected => {
+                if(collected.size <= 0) {
+                    await interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+                    return;
+                }
             });
 
             return;
         } else {
-            await this.confirmOrder(interaction, orderType, orderAmount, orderCost);
+            await this.confirmOrder(interaction, user, orderType, orderAmount, orderCost);
         }
 
     },
     /**
-     * 
-     * @param {CommandInteraction} interaction - User's interaction with the bot 
+     * Allows user to confirm the details of their order before creating it
+     * @param {CommandInteraction} interaction - User's interaction with the bot
+     * @param {Users} user - User fetched from DB 
      * @param {string} orderType - The type of order being confirmed 
      * @param {Integer} orderAmount - The size of the order 
      * @param {Number} orderCost - The cost of the order 
+     * @param {UserCoupons} coupon - The coupon selected
      */
-    async confirmOrder(interaction, orderType, orderAmount, orderCost) {
+    async confirmOrder(interaction, user, orderType, orderAmount, orderCost, coupon) {
         const warnCollector = await MessageHelper.warnMessage(interaction, "order", { 
             type: orderType.name,
             amount: orderAmount,
-            cost: orderCost
+            orderCost: orderCost,
+            coupon: coupon ? coupon.coupon : null
         });
 
         warnCollector.on('confirmed', async i => {
-            await DbOrder.createOrder(interaction.user.id, orderType, orderAmount, null);
+            const order = await DbOrder.createOrder(user, orderType, orderAmount, coupon ? coupon.coupon : null);
+            await MessageHelper.sendOrderDM(interaction, order);
             await interaction.editReply({ content: `You have successfully ordered: \`${orderType.name} x${orderAmount}\`\nDyron has been notified of the order and will be in touch shortly.`, embeds: [], components: [] }).catch(e => console.log(e));
         });
 
