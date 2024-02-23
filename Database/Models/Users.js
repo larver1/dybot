@@ -140,6 +140,14 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 	/**
 	 * Gets all of the user's coupons
 	 */
+	Users.prototype.getCouponsOfValue = async function(value) {
+		const allCoupons = await this.getCoupons();
+		return allCoupons.filter(userCoupon => userCoupon.coupon.value <= value && userCoupon.amount > 0);
+	};
+
+	/**
+	 * Gets all of the user's coupons
+	 */
 	Users.prototype.displayCoupons = async function() {
 		let msg = `None`;
 		const coupons = await this.getCoupons();

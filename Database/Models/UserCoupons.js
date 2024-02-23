@@ -33,10 +33,10 @@ module.exports = (sequelize, DataTypes) => {
 		unique: false,
 		fields: ['coupon_id'],
 	},
-		{
-			unique: false,
-			fields: ['user_id', 'coupon_id'],
-		},
+	{
+		unique: false,
+		fields: ['user_id', 'coupon_id'],
+	},
 	],
 	});
   };

@@ -10,18 +10,47 @@ module.exports = (sequelize, DataTypes) => {
 			primaryKey: true,
 			autoIncrement: true
 		},
+		// ID of user who ordered
+		user_id: {
+			type: DataTypes.STRING,
+		},
+		// ID of coupon type they used (if any)
+		coupon_id: {
+			type: DataTypes.INTEGER,
+			allowNull: true,
+			defaultValue: 0
+		},
         // Status of the order
-        order_status: {
+        status: {
             type: DataTypes.ENUM('received', 'started', 'complete', 'cancelled'),
 			allowNull: false,
             defaultValue: 'received'
         },
-        order_type: {
+        type: {
             type: DataTypes.ENUM('sketch', 'lineart', 'colorblack', 'colorcolor', 'animated'),
             allowNull: false,
             defaultValue: 'sketch'
+        },
+		size: {
+            type: DataTypes.ENUM('small', 'medium', 'large', 'xl'),
+            allowNull: false,
+            defaultValue: 'small'
         }
 	}, {
 		timestamps: true,
+		indexes: [
+			{
+				unique: false,
+				fields: ['user_id'],
+			},
+			{
+				unique: false,
+				fields: ['order_id'],
+			},
+			{
+				unique: false,
+				fields: ['user_id', 'order_id'],
+			},
+			],
 	});
 };

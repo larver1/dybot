@@ -54,7 +54,7 @@ sequelize.sync({ force }).then(async () => {
 			cost: coupon.cost,
 			description: coupon.description,
 			emoji: coupon.emoji,
-			size: coupon.size,
+			value: coupon.value,
 			discount: coupon.discount
 		});
 	}

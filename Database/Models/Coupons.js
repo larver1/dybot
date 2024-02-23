@@ -31,11 +31,11 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.STRING,
 		    allowNull: false,
 		},
-        // Size of coupon
-        size: {
-			type: DataTypes.ENUM('small', 'medium', 'large'),
+        // Value of coupon
+        value: {
+            type: DataTypes.INTEGER,
 			allowNull: false,
-			defaultValue: 'small'
+			defaultValue: 20
         },
         // Discount of coupon
         discount: {

@@ -42,10 +42,6 @@ module.exports = {
 			.setTitle(`${user.tag}'s Coupons!`)
 			.setDescription(couponsMsg)
 
-		// await user.addCouponByID(1, 1);
-		// await user.addCouponByID(4, 1);
-		// await user.addCouponByID(7, 1);
-
 		// Display it
 		await interaction.editReply({ embeds: [profileEmbed, couponsEmbed] }).catch(e => console.log(e));
 		if(!hasCreatedProfile) await interaction.followUp(`${interaction.user}, your profile has successfully been created!`).catch(e => console.log(e));

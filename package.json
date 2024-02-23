@@ -20,6 +20,7 @@
     "discord-hybrid-sharding": "^2.1.4",
     "discord.js": "^14.14.1",
     "mysql2": "^3.9.1",
-    "sequelize": "^6.37.1"
+    "sequelize": "^6.37.1",
+    "uuid": "^9.0.1"
   }
 }

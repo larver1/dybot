@@ -1,74 +1,98 @@
 [
     {
-        "name": "Small 5%",
+        "name": "5% Off 20€ Order",
         "cost": 1,
-        "description": "Get a 5% discount off a Small Batch of icons.",
+        "description": "Get a 5% discount off a 20€ Order.",
         "emoji": "🎟️",
-        "size": "small",
-        "discount": 5
+        "discount": 5,
+        "value": 20
     },
     {
-        "name": "Small 10%",
+        "name": "10% Off 20€ Order",
         "cost": 1,
-        "description": "Get a 10% discount off a Small Batch of icons.",
+        "description": "Get a 10% discount off a 20€ Order.",
         "emoji": "🎟️",
-        "size": "small",
-        "discount": 10
+        "discount": 10,
+        "value": 20
     },
     {
-        "name": "Small 20%",
+        "name": "20% Off 20€ Order",
         "cost": 1,
-        "description": "Get a 20% discount off a Small Batch of icons.",
+        "description": "Get a 20% discount off a 20€ Order.",
         "emoji": "🎟️",
-        "size": "small",
-        "discount": 20
+        "discount": 5,
+        "value": 20
     },
     {
-        "name": "Medium 5%",
+        "name": "5% Off 50€ Order",
         "cost": 1,
-        "description": "Get a 5% discount off a Medium Batch of icons.",
+        "description": "Get a 5% discount off a 50€ Order.",
         "emoji": "🎟️",
-        "size": "medium",
-        "discount": 5
+        "discount": 5,
+        "value": 50
     },
     {
-        "name": "Medium 10%",
+        "name": "10% Off 50€ Order",
         "cost": 1,
-        "description": "Get a 10% discount off a Medium Batch of icons.",
+        "description": "Get a 10% discount off a 50 Order.",
         "emoji": "🎟️",
-        "size": "medium",
-        "discount": 10
+        "discount": 10,
+        "value": 50
     },
     {
-        "name": "Medium 20%",
+        "name": "20% Off 50€ Order",
         "cost": 1,
-        "description": "Get a 20% discount off a Medium Batch of icons.",
+        "description": "Get a 20% discount off a 50 Order.",
         "emoji": "🎟️",
-        "size": "medium",
-        "discount": 20
+        "discount": 20,
+        "value": 50
     },
     {
-        "name": "Large 5%",
+        "name": "5% Off 90€ Order",
         "cost": 1,
-        "description": "Get a 5% discount off a Large Batch of icons.",
+        "description": "Get a 5% discount off a 90€ Order.",
         "emoji": "🎟️",
-        "size": "large",
-        "discount": 5
+        "discount": 5,
+        "value": 50
     },
     {
-        "name": "Large 10%",
+        "name": "10% Off 90€ Order",
         "cost": 1,
-        "description": "Get a 10% discount off a Large Batch of icons.",
+        "description": "Get a 10% discount off a 90€ Order.",
         "emoji": "🎟️",
-        "size": "large",
-        "discount": 10
+        "discount": 10,
+        "value": 90
     },
     {
-        "name": "Large 20%",
+        "name": "20% Off 90€ Order",
         "cost": 1,
-        "description": "Get a 20% discount off a Large Batch of icons.",
+        "description": "Get a 20% discount off a 90€ Order.",
         "emoji": "🎟️",
-        "size": "large",
-        "discount": 20
+        "discount": 20,
+        "value": 90
+    },
+    {
+        "name": "5% Off 150€ Order",
+        "cost": 1,
+        "description": "Get a 5% discount off a 150€ Order.",
+        "emoji": "🎟️",
+        "discount": 5,
+        "value": 150
+    },
+    {
+        "name": "10% Off 150€ Order",
+        "cost": 1,
+        "description": "Get a 10% discount off a 150€ Order.",
+        "emoji": "🎟️",
+        "discount": 10,
+        "value": 150
+    },
+    {
+        "name": "20% Off 150€ Order",
+        "cost": 1,
+        "description": "Get a 20% discount off a 150€ Order.",
+        "emoji": "🎟️",
+        "discount": 20,
+        "value": 150
     }
 ]
