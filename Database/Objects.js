@@ -19,11 +19,13 @@ const sequelize = new Sequelize(dbName, dbUser, dbPass, {
 
 // Require all models to be exported
 const Coupons = require('./Models/Coupons.js')(sequelize, Sequelize.DataTypes);
-const Orders = require('./Models/Orders.js')(sequelize, Sequelize.DataTypes);
+const OrderItems = require('./Models/OrderItems.js')(sequelize, Sequelize.DataTypes);
+const Orders = require('./Models/Orders.js')(sequelize, Sequelize.DataTypes, OrderItems);
 const UserCoupons = require('./Models/UserCoupons.js')(sequelize, Sequelize.DataTypes);
 const Users = require('./Models/Users.js')(sequelize, Sequelize.DataTypes, UserCoupons);
 
 UserCoupons.belongsTo(Coupons, { foreignKey: 'coupon_id', as: 'coupon' });
+OrderItems.belongsTo(Orders, { foreignKey: 'order_id', as: 'item' });
 
 // Export all models to be accessed in application
-module.exports = { Coupons, Orders, UserCoupons, Users, sequelize };
+module.exports = { Coupons, Orders, OrderItems, UserCoupons, Users, sequelize };

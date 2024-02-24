@@ -2,8 +2,8 @@
 /**
  * Stores all orders
  */
-module.exports = (sequelize, DataTypes) => {
-	return sequelize.define('orders', {
+module.exports = (sequelize, DataTypes, OrderItems) => {
+	const Orders = sequelize.define('orders', {
 		// Order ID
 		order_id: {
 			type: DataTypes.INTEGER,
@@ -25,16 +25,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.ENUM('received', 'started', 'complete', 'cancelled'),
 			allowNull: false,
             defaultValue: 'received'
-        },
-        type: {
-            type: DataTypes.ENUM('sketch', 'lineart', 'colorblack', 'colorcolor', 'animated'),
-            allowNull: false,
-            defaultValue: 'sketch'
-        },
-		size: {
-            type: DataTypes.ENUM('small', 'medium', 'large', 'xl'),
-            allowNull: false,
-            defaultValue: 'small'
         }
 	}, {
 		timestamps: true,
@@ -53,4 +43,18 @@ module.exports = (sequelize, DataTypes) => {
 			},
 			],
 	});
+
+	/**
+	 * Gets all of the order's items
+	 */
+	Orders.prototype.getItems = async function() {
+		const items = await OrderItems.findAll({
+			where: { order_id: this.order_id },
+			include: ['item'],
+		});
+		return items;
+	};
+	
+	return Orders;
+
 };

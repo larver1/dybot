@@ -4,7 +4,7 @@ const MessageHelper = require('../../Helpers/MessageHelper.js');
 const DbUser = require('../../Helpers/DbUser.js');
 const DbOrder = require('../../Helpers/DbOrder.js');
 const fs = require('fs');
-const orderTypes = JSON.parse(fs.readFileSync('./Objects/OrderTypes.json'));
+const itemTypes = JSON.parse(fs.readFileSync('./Objects/ItemTypes.json'));
 const { Users, Coupons } = require('../../Database/Objects');
 const { v4: uuidv4 } = require('uuid');
 const crossEmoji = "<a:cross:886245292339515412>";
@@ -25,23 +25,24 @@ module.exports = {
         .addSubcommand(order =>
             order.setName('order')
             .setDescription('View the coupons available to redeem.')
-            .addStringOption(type =>
-				type.setName('type')
-                .setDescription('The type of order you want.')
-                .addChoices(...orderTypes.map((order) => ({ name: order.name, value: order.value })))					  
-                .setRequired(true)
-            )
-            .addStringOption(amount =>
-				amount.setName('amount')
-                .setDescription('The number of emotes you want.')
-                .addChoices(
-                    { name: "Small (x1)", value: "1" },
-                    { name: "Medium (x3)", value: "3" },
-                    { name: "Large (x6)", value: "6" },
-                    { name: "Extra Large (x10)", value: "10" }
-                )					  
-                .setRequired(true)
-            )),
+            // .addStringOption(type =>
+			// 	type.setName('type')
+            //     .setDescription('The type of order you want.')
+            //     .addChoices(...orderTypes.map((order) => ({ name: order.name, value: order.value })))					  
+            //     .setRequired(true)
+            // )
+            // .addStringOption(amount =>
+			// 	amount.setName('amount')
+            //     .setDescription('The number of emotes you want.')
+            //     .addChoices(
+            //         { name: "Small (x1)", value: "1" },
+            //         { name: "Medium (x3)", value: "3" },
+            //         { name: "Large (x6)", value: "6" },
+            //         { name: "Extra Large (x10)", value: "10" }
+            //     )					  
+            //     .setRequired(true)
+            // )
+            ),
 	/**
 	 * Direct the user two various commands to help them learn.
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
@@ -64,11 +65,11 @@ module.exports = {
      * @param {CommandInteraction} interaction - User's interaction with the bot 
      */
     async viewOrderTypes(interaction) {
-        const maxPages = orderTypes.length - 1;
+        const maxPages = itemTypes.length - 1;
         const prevPageId = uuidv4();
         const nextPageId = uuidv4();
         let page = 0;
-        let currentOrderType = orderTypes[page];
+        let currentOrderType = itemTypes[page];
 
         let msg = `__**Prices**__\n`;
         msg += `${currentOrderType.prices.map(order => `### x${order.size}: €${order.cost} (€${(order.cost / order.size).toFixed(2)} per Emote)`).join('\n')}`;
@@ -106,7 +107,7 @@ module.exports = {
 				else page = 0;
 			}
             
-            currentOrderType = orderTypes[page];
+            currentOrderType = itemTypes[page];
             msg = `__**Prices**__\n`;
             msg += `${currentOrderType.prices.map(order => `### x${order.size}: €${order.cost} (€${(order.cost / order.size).toFixed(2)} per Emote)`).join('\n')}`;
     
@@ -136,86 +137,242 @@ module.exports = {
      * @param {Integer} amount - The number of emotes being ordered
      */
     async order(interaction, type, amount) {
-        
-        const orderAmount = parseInt(amount);
-		const orderType = DbOrder.getOrderData(type);
-		const orderPrice = DbOrder.getOrderPrice(orderType, orderAmount);
-        const orderCost = orderPrice.cost;
 
         const user = await DbUser.findUser(interaction.user.id);
         if(!user) throw new Error(`No user is found with ID ${interaction.user.id}`);
 
-        // Check if user has any applicable and ask if they want to use one
-        const orderValue = await this.checkOrderValue(orderCost);
-        const availableCoupons = await user.getCouponsOfValue(orderValue);
-        if(availableCoupons.length) {
-            const selectId = uuidv4();
-            const cancelId = uuidv4();
-            let selectedCoupon;
-            
-            const couponEmbed = new CustomEmbed(interaction)
-            .setTitle(`Would you like to apply a Coupon to save money off your order?`)
-            
-            const selectList = new ActionRowBuilder()
-            .addComponents(
-                new StringSelectMenuBuilder()
-                    .setCustomId(selectId)
-                    .setPlaceholder(`Select a Coupon`)
-                    .addOptions(MessageHelper.getCouponsSelectMenu(availableCoupons)),
-            );
+        const addId = uuidv4();
+        const confirmId = uuidv4();
+        const cancelId = uuidv4();
+        let orderItemsMsg = ``;
+        let totalCost = 0;
 
-            const cancelButton = new ActionRowBuilder()
-            .addComponents(			
-                new ButtonBuilder()
-                    .setCustomId(cancelId)
-                    .setLabel('No Thanks')
-                    .setEmoji(crossEmoji)
-                    .setStyle(ButtonStyle.Danger))
+        const orderEmbed = new CustomEmbed(interaction)
+        .setTitle(`Your Order`)
+        .setDescription(`Add items to your order. Once you are finished, hit "confirm".\n${orderItemsMsg}`)
 
-            const interactionReply = await interaction.editReply({ embeds: [couponEmbed], components: [selectList, cancelButton] }).catch(e => console.log(e));
-            const filter = i => (i.user.id === interaction.user.id) && (i.customId == selectId || i.customId == cancelId);
-            const collector = await interactionReply.createMessageComponentCollector({ filter, time: 60000, errors: ['time'], max: 1 });    
-            
-            collector.on('collect', async i => {
-                await i.deferUpdate().catch(e => {console.log(e)});
-                if(i.customId == selectId) selectedCoupon = availableCoupons[parseInt(i.values)];
-                await this.confirmOrder(interaction, user, orderType, orderAmount, orderCost, selectedCoupon);    
-            });
+        const addItemButton = new ActionRowBuilder()
+        .addComponents(			
+            new ButtonBuilder()
+                .setCustomId(addId)
+                .setLabel('Add Item')
+                .setEmoji('➕')
+                .setStyle(ButtonStyle.Secondary))
 
-            collector.on('end', async collected => {
-                if(collected.size <= 0) {
-                    await interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
-                    return;
+        const orderOptions = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId(confirmId)
+                .setLabel('Confirm')
+                .setEmoji('<a:tick:886245262169866260>')
+                .setStyle(ButtonStyle.Primary),
+            new ButtonBuilder()
+                .setCustomId(cancelId)
+                .setLabel('Cancel')
+                .setEmoji('<a:cross:886245292339515412>')
+                .setStyle(ButtonStyle.Danger)
+        )
+        const embeds = [orderEmbed];
+        const components = [addItemButton, orderOptions];
+        const orderItems = [];
+
+        const interactionReply = await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.log(e));
+        const filter = i => i.user.id === interaction.user.id && (i.customId == addId || i.customId == confirmId || i.customId == cancelId);
+        const collector = interactionReply.createMessageComponentCollector({ filter, time: 300_000, errors: ['time'] });
+        collector.on('collect', async i => { 
+            await i.deferUpdate().catch(e => {console.log(e)});
+            if(i.customId == cancelId) {
+                collector.stop();
+                return interaction.editReply({ content: `The order has been cancelled.`, components: [] }).catch(e => console.log(e));
+            } else if(i.customId == confirmId) {
+                if(!orderItems.length) {
+                    return interaction.editReply({ content: `${interaction.user}, you must add at least one item before confirming an order` }).catch(e => console.log(e));
+                } else {
+                    collector.stop();
+                    const orderValue = await this.checkOrderValue(totalCost);
+                    const availableCoupons = await user.getCouponsOfValue(orderValue);
+
+                    if(availableCoupons.length) return this.selectCoupon(interaction, user, orderItems, availableCoupons);
+                    else return this.confirmOrder(interaction, user, orderItems);
                 }
-            });
+            } else if(i.customId == addId) {
+                // Disable buttons
+                MessageHelper.activateButtons(components, false);
+                await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.log(e));            }
 
-            return;
-        } else {
-            await this.confirmOrder(interaction, user, orderType, orderAmount, orderCost);
-        }
+                // Follow up message
+                await this.addItem(interaction, components, collector);
 
+        });
+
+        collector.on('addItem', async item => {
+            orderItems.push(item);
+            const orderType = DbOrder.getItemData(item.type);
+            const orderPrice = DbOrder.getItemPrice(orderType, item.size);
+            orderItemsMsg = `${MessageHelper.displayOrderItems(orderItems)}`;
+            totalCost += orderPrice.cost;
+
+            embeds[0].setDescription(`Please add items to your order. Once you are finished, hit "confirm".\n${orderItemsMsg}\n\n__**Total Base Cost: ${totalCost.toFixed(2)}€**__`);
+            await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.log(e));
+        });
+
+    },
+    /**
+     * Add an item to an order
+     * @param {CommandInteraction} interaction - User's interaction with the bot
+     * @param {Array} orderMessageComponents - Message components
+     * @param {Collector} orderCollector - The message collector of the order message
+     */
+    async addItem(interaction, orderMessageComponents, orderCollector) {
+
+        // Get all order types
+        const selectOrderTypes = MessageHelper.getGenericSelectMenu(itemTypes.map((order) => ({ name: order.name, value: order.value }) ));
+        const selectOrderAmounts = MessageHelper.getGenericSelectMenu([ 
+            { name: 'Small (x1)', value: 'small' }, 
+            { name: 'Medium (x3)', value: 'medium' }, 
+            { name: 'Large (x6)', value: 'large' }, 
+            { name: 'Extra Large (x10)', value: 'xl' }
+        ]);
+
+        const orderTypeId = uuidv4();
+        const orderAmountId = uuidv4();
+        const confirmId = uuidv4();
+        const cancelId = uuidv4();
+
+        // Build necessary components
+        const orderTypeSelectMenu = new ActionRowBuilder()
+        .addComponents(
+            new StringSelectMenuBuilder()
+                .setCustomId(orderTypeId)
+                .setPlaceholder('Select an Order Type')
+                .addOptions(selectOrderTypes) 
+                .setMinValues(1)
+                .setMaxValues(1),  
+        );
+        const orderAmountSelectMenu = new ActionRowBuilder()
+        .addComponents(
+            new StringSelectMenuBuilder()
+                .setCustomId(orderAmountId)
+                .setPlaceholder('Select an Order Size')
+                .addOptions(selectOrderAmounts)
+                .setMinValues(1)
+                .setMaxValues(1),   
+        );
+        const orderOptions = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId(confirmId)
+                .setLabel('Confirm')
+                .setEmoji('<a:tick:886245262169866260>')
+                .setStyle(ButtonStyle.Primary),
+            new ButtonBuilder()
+                .setCustomId(cancelId)
+                .setLabel('Cancel')
+                .setEmoji('<a:cross:886245292339515412>')
+                .setStyle(ButtonStyle.Danger)
+        )
+
+        const components = [orderTypeSelectMenu, orderAmountSelectMenu, orderOptions];
+        const interactionReply = await interaction.followUp({ content: `Please select an order type and order size`, components: components }).catch(e => console.log(e));
+        
+        const filter = i => i.user.id === interaction.user.id && (i.customId == orderTypeId || i.customId == orderAmountId || i.customId == confirmId || i.customId == cancelId);
+        const collector = interactionReply.createMessageComponentCollector({ filter, time: 300_000, errors: ['time'] });
+        
+        let currentOrderType, currentOrderAmount;
+        
+        collector.on('collect', async i => { 
+            await i.deferUpdate().catch(e => {console.log(e)});
+
+            if(i.customId == orderTypeId) {
+                currentOrderType = i.values[0];
+            } 
+            else if(i.customId == orderAmountId) {
+                currentOrderAmount = i.values[0];
+            } 
+            else if(i.customId == confirmId || i.customId == cancelId) {
+                // If confirming, add item to list
+                if(i.customId == confirmId) {
+                    if(!currentOrderType || !currentOrderAmount) {
+                        return interactionReply.edit({ content: `You must select an order type and order amount before confirming. `}).catch(e => console.log(e));
+                    } else {
+                        orderCollector.emit('addItem', { type: currentOrderType, size: currentOrderAmount });
+                    }
+                }
+
+                // Delete message and reactivate order buttons
+                MessageHelper.activateButtons(orderMessageComponents, true);
+                await interactionReply.delete().catch(e => console.log(e));
+                await interaction.editReply({ components: orderMessageComponents }).catch(e => console.log(e));
+            
+            }
+        });
+    },
+    /**
+     * 
+     * @param {CommandInteraction} interaction - User's interaction with the bot
+     * @param {Users} user - User fetched from DB
+     * @param {Array} orderItems - Array of items added to the order 
+     * @param {Array} availableCoupons - All coupons the user can select 
+     */
+    async selectCoupon(interaction, user, orderItems, availableCoupons) {
+        const selectId = uuidv4();
+        const cancelId = uuidv4();
+        let selectedCoupon;
+        
+        const couponEmbed = new CustomEmbed(interaction)
+        .setTitle(`Would you like to apply a Coupon to save money off your order?`)
+        
+        const selectList = new ActionRowBuilder()
+        .addComponents(
+            new StringSelectMenuBuilder()
+                .setCustomId(selectId)
+                .setPlaceholder(`Select a Coupon`)
+                .addOptions(MessageHelper.getCouponsSelectMenu(availableCoupons)),
+        );
+
+        const cancelButton = new ActionRowBuilder()
+        .addComponents(			
+            new ButtonBuilder()
+                .setCustomId(cancelId)
+                .setLabel('No Thanks')
+                .setEmoji(crossEmoji)
+                .setStyle(ButtonStyle.Danger))
+
+        const interactionReply = await interaction.editReply({ embeds: [couponEmbed], components: [selectList, cancelButton] }).catch(e => console.log(e));
+        const filter = i => (i.user.id === interaction.user.id) && (i.customId == selectId || i.customId == cancelId);
+        const collector = await interactionReply.createMessageComponentCollector({ filter, time: 60000, errors: ['time'], max: 1 });    
+        
+        collector.on('collect', async i => {
+            await i.deferUpdate().catch(e => {console.log(e)});
+            if(i.customId == selectId) selectedCoupon = availableCoupons[parseInt(i.values)];
+            await this.confirmOrder(interaction, user, orderItems, selectedCoupon);    
+        });
+
+        collector.on('end', async collected => {
+            if(collected.size <= 0) {
+                await interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+                return;
+            }
+        });
     },
     /**
      * Allows user to confirm the details of their order before creating it
      * @param {CommandInteraction} interaction - User's interaction with the bot
      * @param {Users} user - User fetched from DB 
-     * @param {string} orderType - The type of order being confirmed 
-     * @param {Integer} orderAmount - The size of the order 
-     * @param {Number} orderCost - The cost of the order 
+     * @param {Array} orderItems - The list of items added to the order 
      * @param {UserCoupons} coupon - The coupon selected
      */
-    async confirmOrder(interaction, user, orderType, orderAmount, orderCost, coupon) {
+    async confirmOrder(interaction, user, orderItems, coupon) {
         const warnCollector = await MessageHelper.warnMessage(interaction, "order", { 
-            type: orderType.name,
-            amount: orderAmount,
-            orderCost: orderCost,
+            items: orderItems,
             coupon: coupon ? coupon.coupon : null
         });
 
         warnCollector.on('confirmed', async i => {
-            const order = await DbOrder.createOrder(user, orderType, orderAmount, coupon ? coupon.coupon : null);
+            const order = await DbOrder.createOrder(user, orderItems, coupon ? coupon.coupon : null);
+            order.items = await order.getItems();
             await MessageHelper.sendOrderDM(interaction, order);
-            await interaction.editReply({ content: `You have successfully ordered: \`${orderType.name} x${orderAmount}\`\nDyron has been notified of the order and will be in touch shortly.`, embeds: [], components: [] }).catch(e => console.log(e));
+            await interaction.editReply({ content: `Your order has been created successfully, you will receive a DM with the receipt. Dyron has also been notified of the order and will be in touch shortly.`, embeds: [], components: [] }).catch(e => console.log(e));
         });
 
         warnCollector.on('declined', async i => {

@@ -5,7 +5,7 @@ const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } 
 const tickEmoji = "<a:tick:886245262169866260>";
 const crossEmoji = "<a:cross:886245292339515412>";
 const fs = require('fs');
-const orderTypes = JSON.parse(fs.readFileSync('./Objects/OrderTypes.json'));
+const itemTypes = JSON.parse(fs.readFileSync('./Objects/ItemTypes.json'));
 const { Coupons } = require('../Database/Objects');
 
 /**
@@ -29,15 +29,16 @@ module.exports = class MessageHelper {
 		let warning;
 		switch(type) {
 			case "order":
-				let discountCost = data.orderCost;
+				let orderCost = DbOrder.getTotalOrderCost(data.items);
+				let discountCost = orderCost;
 				let discountMsg = "";
 				if(data.coupon) {
-					discountCost = Math.round(data.orderCost * ((100 - data.coupon.discount) / 100));
-					discountMsg = `~~${data.orderCost.toFixed(2)}€~~ `;
+					discountCost = DbOrder.getOrderDiscount(orderCost, data.coupon);
+					discountMsg = `~~${orderCost.toFixed(2)}€~~ `;
 				} 
 				warning = new CustomEmbed(interaction)
-					.setTitle(`Are you sure you want to order x${data.amount} ${data.type} Emotes?`)
-					.setDescription(`The total cost of this order will be\n## ${discountMsg ? discountMsg : ""}${discountCost.toFixed(2)}€\n${data.coupon ? `__You applied a ${data.coupon.emoji} ${data.coupon.name} coupon.__` : ``}`)
+					.setTitle(`Are you sure you want to order the following Emotes?`)
+					.setDescription(`${MessageHelper.displayOrderItems(data.items)}\nThe total cost of this order will be\n## ${discountMsg ? discountMsg : ""}${discountCost.toFixed(2)}€\n${data.coupon ? `__You applied a ${data.coupon.emoji} ${data.coupon.name} coupon.__` : ``}`)
 				break;
 			case "leaderboard":
 				warning = new CustomEmbed(interaction)
@@ -111,6 +112,21 @@ module.exports = class MessageHelper {
     }
 
 	/**
+	 * Pass in array of objects to place into SelectMenu
+	 * @param {Array} components - Objects to put into select menu
+	 */
+	static getGenericSelectMenu(components) {
+		let selectionList = [];
+		for(let i = 0; i < components.length; i++) {
+			selectionList.push({
+				label: components[i].name,
+				value: components[i].value ? `${components[i].value}` : `${i}`
+			});
+		}
+		return selectionList;
+	}
+
+	/**
 	 * Send the admin and the user a confirmation of a new order
 	 * @param {CommandInteraction} interaction - User's interaction with the bot 
 	 * @param {Orders} order - The order that was just created 
@@ -120,21 +136,20 @@ module.exports = class MessageHelper {
         const admin = await interaction.client.users.fetch(interaction.client.config.adminId);
 		if(!client || !admin) throw new Error('Client or Admin users could not be found.');
 
-		const orderType = DbOrder.getOrderData(order.type);
-		const orderPrice = DbOrder.getOrderPrice(orderType, order.size);
+		const orderCost = DbOrder.getTotalOrderCost(order.items);
 		const coupon = order.coupon_id ? await Coupons.findOne({ where: { coupon_id : order.coupon_id } }) : null; 
 		const couponMsg = coupon ? `This client used a ${coupon.emoji} ${coupon.name} Coupon on their order.` : ``;
-		const discountCost = coupon ? DbOrder.getOrderDiscount(orderPrice.cost, coupon) : null;
+		const discountCost = coupon ? DbOrder.getOrderDiscount(orderCost, coupon) : orderCost;
 
 		// Send notification to admin
 		const orderEmbed = new CustomEmbed(interaction, admin)
 		.setTitle(`You received a New Order! 🥳`)
-		.setDescription(`ID: \`#${order.order_id}\`\nFrom: \`${client.tag} (ID: ${client.id})\`\nType: \`${orderType.name}\`\nSize: \`x${orderPrice.size} (${order.size})\`\nCost: ${coupon ? `~~\`${orderPrice.cost.toFixed(2)}€\`~~ ` : ``}\`${discountCost.toFixed(2)}€\`\n\n${couponMsg ? couponMsg : ''}`)
+		.setDescription(`ID: \`#${order.order_id}\`\nFrom: \`${client.tag} (ID: ${client.id})\`\n${MessageHelper.displayOrderItems(order.items)}\nCost: ${coupon ? `~~\`${orderCost.toFixed(2)}€\`~~ ` : ``}\`${discountCost.toFixed(2)}€\`\n\n${couponMsg ? couponMsg : ''}`)
 
 		// Send receipt to client
 		const receiptEmbed = new CustomEmbed(interaction, client)
 		.setTitle(`Your order confirmation`)
-		.setDescription(`ID: \`#${order.order_id}\`\nType: \`${orderType.name}\`\nSize: \`x${orderPrice.size} (${order.size})\`\nCost: ${coupon ? `~~\`${orderPrice.cost.toFixed(2)}€\`~~ ` : ``}\`${discountCost.toFixed(2)}€\`\n\nDyron will be in touch shortly to discuss the commission and agree on a contract. If you wish to cancel this order, please let them know directly.`)
+		.setDescription(`ID: \`#${order.order_id}\`\n${MessageHelper.displayOrderItems(order.items)}\nCost: ${coupon ? `~~\`${orderCost.toFixed(2)}€\`~~ ` : ``}\`${discountCost.toFixed(2)}€\`\n\nDyron will be in touch shortly to discuss the commission and agree on a contract. If you wish to cancel this order, please let them know directly.`)
 
 		try {
 			await admin.send({ embeds: [orderEmbed] });
@@ -152,4 +167,32 @@ module.exports = class MessageHelper {
 			console.warn(error);
 		}
 	}
+
+	/**
+	 * Enable/Disable buttons passed in
+	 * @param {Array} components - Components to enable/disable
+	 * @param {Boolean} enable - Whether to enable or disable
+	 */
+	static activateButtons(components, enable) {
+		for(const component of components) {
+			for(const object of component.components) {
+				object.setDisabled(!enable);
+			}
+		}
+		return components;
+	}
+
+	/**
+	 * Display all of an order's items in a list
+	 * @param {Array} items
+	 */
+	static displayOrderItems(items) {
+		let msg = ``;
+		for(const item of items) {
+			const orderType = DbOrder.getItemData(item.type);
+			msg += `- ${DbOrder.orderNames[item.size]} ${orderType.name} Emotes\n`;
+		}
+		return msg;
+	}
+
 }

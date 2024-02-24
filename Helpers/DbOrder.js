@@ -1,6 +1,6 @@
-const { Orders } = require('../Database/Objects');
+const { Orders, OrderItems } = require('../Database/Objects');
 const fs = require('fs');
-const orderTypes = JSON.parse(fs.readFileSync('./Objects/OrderTypes.json'));
+const itemTypes = JSON.parse(fs.readFileSync('./Objects/ItemTypes.json'));
 
 /**
  * Interface for performing DB operations to a user.
@@ -14,30 +14,62 @@ module.exports = class DbOrder {
         10: 'xl'
     };
 
+    static orderNames = {
+        'small': 'Small (x1)',
+        'medium': 'Medium (x3)',
+        'large': 'Large (x6)',
+        'xl': 'Extra Large (x10)'
+    };
+
     /**
 	 * Creates a user with the given ID and tag
 	 * @param {Users} user - User fetched from DB
 	 * @param {string} tag - User's discord tag
 	 */
-    static async createOrder(user, orderType, orderAmount, coupon) {
+    static async createOrder(user, orderItems, coupon) {
+        // Create the order
         const order = await Orders.create({
             user_id: user.user_id,
-            type: orderType.value,
-            size: DbOrder.orderSizes[orderAmount],
             coupon_id: coupon ? coupon.coupon_id : 0,
             status: 'received'
         });
+        order.items = [];
 
+        // Create each item involved in the order
+        for(const item of orderItems) {
+            const orderItem = await OrderItems.create({
+                order_id: order.order_id,
+                type: item.type,
+                size: item.size
+            });
+            order.items.push(orderItem);
+        }
+
+        // Remove coupon from user
         if(coupon) await user.removeCoupon(coupon, 1);        
         return order;
     }
 
     /**
-     * Find order object data by order type
-     * @param {string} orderType - The type of order to search for 
+     * Total cost of every item in an order
+     * @param {Array} items - Items in the order 
      */
-    static getOrderData(orderType) {
-		return orderTypes.find(order => order.value == orderType);
+    static getTotalOrderCost(items) {
+        let cost = 0;
+        for(const item of items) {
+            const itemData = DbOrder.getItemData(item.type);
+            const itemPrice = DbOrder.getItemPrice(itemData, item.size);
+            cost += itemPrice.cost;
+        }
+        return cost;
+    }
+
+    /**
+     * Find order object data by order type
+     * @param {string} itemType - The type of order to search for 
+     */
+    static getItemData(itemType) {
+		return itemTypes.find(item => item.value == itemType);
     }
 
     /**
@@ -45,8 +77,8 @@ module.exports = class DbOrder {
      * @param {Object} orderData - The order data to search through
      * @param {Any} size - The size of the order
      */
-    static getOrderPrice(orderData, size) {
-		return orderData.prices.find(prices => (prices.size == size) || (DbOrder.orderSizes[prices.size] == size));
+    static getItemPrice(itemData, size) {
+		return itemData.prices.find(prices => (prices.size == size) || (DbOrder.orderSizes[prices.size] == size));
     }
 
     /**

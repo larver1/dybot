@@ -40,6 +40,7 @@ module.exports = conn;
 
 const Coupons = require('../Database/Models/Coupons.js')(sequelize, Sequelize.DataTypes);
 require('../Database/Models/Orders.js')(sequelize, Sequelize.DataTypes);
+require('../Database/Models/OrderItems.js')(sequelize, Sequelize.DataTypes);
 require('../Database/Models/UserCoupons.js')(sequelize, Sequelize.DataTypes);
 require('../Database/Models/Users.js')(sequelize, Sequelize.DataTypes);
 
@@ -54,7 +55,7 @@ sequelize.sync({ force }).then(async () => {
 			cost: coupon.cost,
 			description: coupon.description,
 			emoji: coupon.emoji,
-			size: coupon.size,
+			value: coupon.value,
 			discount: coupon.discount
 		});
 	}

@@ -61,7 +61,7 @@ module.exports = {
 			.setDescription(couponsMsg)
 
 		// Display it
-		await interaction.editReply({ embeds: [profileEmbed, couponsEmbed] }).catch(e => console.log(e));
+		await interaction.editReply({ embeds: [profileEmbed, couponsEmbed], components: [] }).catch(e => console.log(e));
 		if(newProfileMessage) await interaction.followUp(`${interaction.user}, your profile has successfully been created!\n\n${newProfileMessage}`).catch(e => console.log(e));
 	}
 }
