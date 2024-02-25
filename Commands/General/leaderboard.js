@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const CustomEmbed = require('../../Helpers/CustomEmbed.js');
 const DbUser = require('../../Helpers/DbUser.js');
+const { inlineCode, codeBlock } = require('discord.js');
 
 /**
  * @param {SlashCommandBuilder} data - Command data.
@@ -35,11 +36,7 @@ module.exports = {
 		if(subCommand == 'view') {
             await this.viewLeaderboard(interaction);
         } else if(subCommand == 'visible') {
-            const visible = interaction.options.getString('option') == 'yes';
-            const user = await DbUser.findUser(interaction.user.id);
-            user.setDataValue('leaderboard', visible);
-            await user.save();
-            await interaction.editReply({ content: `You are now ${visible ? `visible` : `hidden from`} \`/leaderboard view\`.` }).catch(e => console.log(e));
+            await this.changeVisibility(interaction);
         }
 	},
     /**
@@ -55,14 +52,25 @@ module.exports = {
         for(let i = 0; i < topUsers.length; i++) {
             if(i < 10 && topUsers[i].leaderboard) {
                 const clientUser = await interaction.client.users.fetch(topUsers[i].user_id);
-                msg += `${i + 1}. ${clientUser.tag}: ${topUsers[i].balance} DyDots`;
+                msg += `${inlineCode(`${i + 1}. ${clientUser.tag}: 💰${topUsers[i].getDataValue('balance')} DyDots`)}`;
             }
             if(topUsers[i].user_id == interaction.user.id) {
                 userPosition = i + 1;
             }
         }
 
-        msg += `\n\n__You have ${user.balance} DyDots. You are in position X__`;
+        msg += `\n\nYou have ${user.balance} DyDots. You are in position ${userPosition}`;
         await interaction.editReply({ content: msg }).catch(e => console.log(e));
+    },
+    /**
+     * Changes a user's visibility on the leaderboard
+     * @param {CommandInteraction} interaction - User's interaction with the bot
+     */
+    async changeVisibility(interaction) {
+        const visible = interaction.options.getString('option') == 'yes';
+        const user = await DbUser.findUser(interaction.user.id);
+        user.setDataValue('leaderboard', visible);
+        await user.save();
+        await interaction.editReply({ content: `You are now ${visible ? `visible` : `hidden from`} \`/leaderboard view\`.` }).catch(e => console.log(e));
     }
 }

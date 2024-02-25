@@ -22,40 +22,35 @@ module.exports = {
         .addSubcommand(view =>
 			view.setName('options')
 			.setDescription('See the types of emotes you can buy.'))
-        .addSubcommand(order =>
-            order.setName('order')
-            .setDescription('View the coupons available to redeem.')
-            // .addStringOption(type =>
-			// 	type.setName('type')
-            //     .setDescription('The type of order you want.')
-            //     .addChoices(...orderTypes.map((order) => ({ name: order.name, value: order.value })))					  
-            //     .setRequired(true)
-            // )
-            // .addStringOption(amount =>
-			// 	amount.setName('amount')
-            //     .setDescription('The number of emotes you want.')
-            //     .addChoices(
-            //         { name: "Small (x1)", value: "1" },
-            //         { name: "Medium (x3)", value: "3" },
-            //         { name: "Large (x6)", value: "6" },
-            //         { name: "Extra Large (x10)", value: "10" }
-            //     )					  
-            //     .setRequired(true)
-            // )
-            ),
+        .addSubcommandGroup(order =>
+            order
+                .setName('order')
+                .setDescription('Access your orders or create new ones.')
+            .addSubcommand(create =>
+                create.setName('create')
+                .setDescription('Create a new order.'))
+            .addSubcommand(view =>
+                view.setName('view')
+                .setDescription('View your orders.'))
+        ),
 	/**
 	 * Direct the user two various commands to help them learn.
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
 	 */
 	async execute(interaction) {
         const subCommand = interaction.options.getSubcommand();
+		const subCommandGroup = interaction.options._group ? interaction.options.getSubcommandGroup() : null;
 
         if(subCommand == 'options') {
             this.viewOrderTypes(interaction);
-        } else if(subCommand == 'order') {
-            const type = interaction.options.getString('type');
-            const amount = interaction.options.getString('amount');
-            this.order(interaction, type, amount);
+        } else if(subCommandGroup == 'order') {
+            if(subCommand == 'create') {
+                const type = interaction.options.getString('type');
+                const amount = interaction.options.getString('amount');
+                this.order(interaction, type, amount);
+            } else if(subCommand == 'view') {
+                this.viewOrders(interaction);
+            }
         } else {
             throw new Error(`Coupons subcommand is invalid! Got ${subCommand}`);
         }
@@ -226,13 +221,13 @@ module.exports = {
     async addItem(interaction, orderMessageComponents, orderCollector) {
 
         // Get all order types
-        const selectOrderTypes = MessageHelper.getGenericSelectMenu(itemTypes.map((order) => ({ name: order.name, value: order.value }) ));
+        const selectOrderTypes = MessageHelper.getGenericSelectMenu(itemTypes.map((order) => ({ name: order.name, value: order.value }) ))[0];
         const selectOrderAmounts = MessageHelper.getGenericSelectMenu([ 
             { name: 'Small (x1)', value: 'small' }, 
             { name: 'Medium (x3)', value: 'medium' }, 
             { name: 'Large (x6)', value: 'large' }, 
             { name: 'Extra Large (x10)', value: 'xl' }
-        ]);
+        ])[0];
 
         const orderTypeId = uuidv4();
         const orderAmountId = uuidv4();
@@ -378,5 +373,117 @@ module.exports = {
         warnCollector.on('declined', async i => {
             return interaction.editReply({ content: `The order has been cancelled.`, embeds: [], components: [] }).catch(e => console.log(e));
         });
+    },
+    /**
+     * Allows user to view their orders
+     * @param {CommandInteraction} interaction - User's interaction with the bot  
+     */
+    async viewOrders(interaction) {
+        const orders = await DbOrder.getUserOrders(interaction.user.id, true);
+        const selectOrders = MessageHelper.getGenericSelectMenu(orders.map(order =>  ({ name: `Order #${order.order_id}: ${order.status}`, description: `${MessageHelper.displayOrderItemsSummary(order.items)}` })));
+        const selectId = uuidv4();
+        const prevPageId = uuidv4();
+        const nextPageId = uuidv4();
+        const cancelId = uuidv4();
+        const maxPages = selectOrders.length - 1;
+
+        let page = 0;
+        let orderIndex, order, viewOrderEmbed;
+
+        let orderTypeSelectMenu = new ActionRowBuilder()
+        .addComponents(
+            new StringSelectMenuBuilder()
+                .setCustomId(selectId)
+                .setPlaceholder(`[Page ${page + 1}/${maxPages + 1}] Select an Order`)
+                .addOptions(selectOrders[page]) 
+                .setMinValues(1)
+                .setMaxValues(1),  
+        );
+
+        const nextPage = new ActionRowBuilder()
+        .addComponents(			
+            new ButtonBuilder()
+                .setCustomId(prevPageId)
+                .setLabel('Prev Page: ')
+                .setEmoji('<:leftarrow:709828405952249946>')
+                .setStyle(ButtonStyle.Secondary),	
+            new ButtonBuilder()
+                .setCustomId(nextPageId)
+                .setLabel('Next Page: ')
+                .setEmoji('<:rightarrow:709828406048587806>')
+                .setStyle(ButtonStyle.Secondary))
+
+            const cancelButton = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId(cancelId)
+                    .setLabel('Cancel Order')
+                    .setEmoji('<a:cross:886245292339515412>')
+                    .setStyle(ButtonStyle.Danger)
+            )
+
+        const interactionReply = await interaction.editReply({ components: [orderTypeSelectMenu, nextPage] }).catch(e => console.log(e));
+        const filter = i => i.user.id === interaction.user.id && (i.customId == prevPageId || i.customId == nextPageId || i.customId == selectId || i.customId == cancelId);
+        const collector = interactionReply.createMessageComponentCollector({ filter, time: 300_000, errors: ['time'] });
+
+        collector.on('collect', async i => { 
+            await i.deferUpdate().catch(e => {console.log(e)});
+			if(i.customId == prevPageId) {
+				if(page == 0) page = maxPages;
+				else page--;
+			} else if(i.customId == nextPageId) {
+				if(page < maxPages) page++;
+				else page = 0;
+			} else if(i.customId == selectId) {
+                
+                orderIndex = parseInt(i.values);
+                order = orders[orderIndex];
+
+                viewOrderEmbed = await MessageHelper.displayOrderEmbed(interaction, order, order.items);
+            } else if(i.customId == cancelId) {
+                const warnCollector = await MessageHelper.warnMessage(interaction, "cancel");
+                warnCollector.on('confirmed', async i => {
+                    await this.cancelOrder(interaction, order);
+
+                    // View orders again
+                    collector.stop();
+                    await this.viewOrders(interaction);
+
+                    return;
+                });
+                warnCollector.on('declined', async i => {
+                    const embeds = viewOrderEmbed ? [viewOrderEmbed] : null;
+                    await interaction.editReply({ content: ` `, embeds: embeds, components: [orderTypeSelectMenu, nextPage, cancelButton] }).catch(e => console.log(e));
+                    return;
+                });
+                return;
+            }
+
+            orderTypeSelectMenu = new ActionRowBuilder()
+            .addComponents(
+                new StringSelectMenuBuilder()
+                    .setCustomId(selectId)
+                    .setPlaceholder(`[Page ${page + 1}/${maxPages + 1}] Select an Order`)
+                    .addOptions(selectOrders[page]) 
+                    .setMinValues(1)
+                    .setMaxValues(1),  
+            );
+
+            const embeds = viewOrderEmbed ? [viewOrderEmbed] : null;
+            cancelButton.components[0].setDisabled(order.status != "received");
+
+            await interaction.editReply({ content: ` `, embeds: embeds, components: [orderTypeSelectMenu, nextPage, cancelButton] }).catch(e => console.log(e));
+    
+        })
+    },
+    /**
+     * 
+     * @param {CommandInteraction} interaction - User's interaction with the bot 
+     * @param {Orders} order - The order to cancel 
+     */
+    async cancelOrder(interaction, order) {
+        await DbOrder.cancelOrder(order);
+        await MessageHelper.sendOrderDM(interaction, order, true);
+        await interaction.editReply({ content: `Order #${order.order_id} has been cancelled.`, embeds: [] }).catch(e => console.log(e));
     }
 }

@@ -1,6 +1,7 @@
-const { Orders, OrderItems } = require('../Database/Objects');
+const { Orders, OrderItems, Coupons } = require('../Database/Objects');
 const fs = require('fs');
 const itemTypes = JSON.parse(fs.readFileSync('./Objects/ItemTypes.json'));
+const DbUser = require('../Helpers/DbUser.js');
 
 /**
  * Interface for performing DB operations to a user.
@@ -12,6 +13,13 @@ module.exports = class DbOrder {
         3: 'medium',
         6: 'large',
         10: 'xl'
+    };
+
+    static orderAmounts = {
+        small: 1,
+        medium: 3,
+        large: 6,
+        xl: 10
     };
 
     static orderNames = {
@@ -65,6 +73,17 @@ module.exports = class DbOrder {
     }
 
     /**
+     * Cancels an order
+     * @param {Orders} order 
+     */
+    static async cancelOrder(order) {
+        const user = await DbUser.findUser(order.user_id);
+        if(order.coupon_id) await user.addCouponByID(order.coupon_id, 1);
+        order.status = 'cancelled';
+        await order.save();
+    }
+
+    /**
      * Find order object data by order type
      * @param {string} itemType - The type of order to search for 
      */
@@ -88,5 +107,22 @@ module.exports = class DbOrder {
      */
     static getOrderDiscount(orderCost, coupon) {
         return Math.round(orderCost * ((100 - coupon.discount) / 100));
+    }
+
+    /**
+     * Get a user's orders
+     * @param {String} userId - User's ID
+     * @param {Boolean} withItems - Whether items should be included
+     */
+    static async getUserOrders(userId, withItems) {
+        const orders = await Orders.findAll({ where: { user_id: userId }, order: [['updatedAt', 'DESC']] });
+        
+        if(withItems) {
+            for(const order of orders) {
+                order.items = await order.getItems();
+            }
+        }
+        
+        return orders;
     }
 }

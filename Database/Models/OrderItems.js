@@ -39,6 +39,6 @@ module.exports = (sequelize, DataTypes) => {
 				unique: false,
 				fields: ['item_id', 'order_id'],
 			},
-			],
+		],
 	});
 };

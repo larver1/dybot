@@ -45,6 +45,11 @@ module.exports = class MessageHelper {
 				.setTitle(`Do you want to be shown on the leaderboard?`)
 				.setDescription(`This will mean that any user who uses DyBot could see your username. Is this okay?\n\nYou can change this option at any time using \`/leaderboard visible\``)
 				break;
+			case "cancel":
+				warning = new CustomEmbed(interaction)
+				.setTitle(`Are you sure you want to cancel this order?`)
+				.setDescription(`Any coupons you used will be refunded back to you.`)
+				break;
 			default:
                 throw new Error('No valid type passed in warn message.');
         }
@@ -116,40 +121,60 @@ module.exports = class MessageHelper {
 	 * @param {Array} components - Objects to put into select menu
 	 */
 	static getGenericSelectMenu(components) {
-		let selectionList = [];
-		for(let i = 0; i < components.length; i++) {
-			selectionList.push({
+        let selectionList = [];
+        selectionList[0] = [];
+        let page = 0;
+        
+        for(let i = 0; i < components.length; i++) {
+            // Each SelectMenu can only have 20 items, so start a new page
+            if((i + 1) % 26 == 0) {
+                page++; 
+                selectionList.push([]);
+            } 
+
+			// Add item to SelectMenu
+			selectionList[page].push({
 				label: components[i].name,
+				description: components[i].description,
 				value: components[i].value ? `${components[i].value}` : `${i}`
 			});
-		}
-		return selectionList;
-	}
+        }
+
+        return selectionList;
+    }
 
 	/**
 	 * Send the admin and the user a confirmation of a new order
 	 * @param {CommandInteraction} interaction - User's interaction with the bot 
-	 * @param {Orders} order - The order that was just created 
+	 * @param {Orders} order - The order that was just created
+	 * @param {Boolean} cancelled - Whether the order is being cancelled 
 	 */
-	static async sendOrderDM(interaction, order) {
+	static async sendOrderDM(interaction, order, cancelled) {
         const client = await interaction.client.users.fetch(order.user_id);
         const admin = await interaction.client.users.fetch(interaction.client.config.adminId);
 		if(!client || !admin) throw new Error('Client or Admin users could not be found.');
 
 		const orderCost = DbOrder.getTotalOrderCost(order.items);
 		const coupon = order.coupon_id ? await Coupons.findOne({ where: { coupon_id : order.coupon_id } }) : null; 
-		const couponMsg = coupon ? `This client used a ${coupon.emoji} ${coupon.name} Coupon on their order.` : ``;
 		const discountCost = coupon ? DbOrder.getOrderDiscount(orderCost, coupon) : orderCost;
+
+		let couponMsg;
+		if(coupon) {
+			if(cancelled) couponMsg = `\n\nThe ${coupon.emoji} ${coupon.name} Coupon has been given back.`;
+			else couponMsg = `\n\nA ${coupon.emoji} ${coupon.name} Coupon was used on this order.`;
+		}
 
 		// Send notification to admin
 		const orderEmbed = new CustomEmbed(interaction, admin)
-		.setTitle(`You received a New Order! 🥳`)
-		.setDescription(`ID: \`#${order.order_id}\`\nFrom: \`${client.tag} (ID: ${client.id})\`\n${MessageHelper.displayOrderItems(order.items)}\nCost: ${coupon ? `~~\`${orderCost.toFixed(2)}€\`~~ ` : ``}\`${discountCost.toFixed(2)}€\`\n\n${couponMsg ? couponMsg : ''}`)
+		.setTitle(cancelled ? `This order has been cancelled ❌` : `You received a New Order! 🥳`)
+		.setDescription(`ID: \`#${order.order_id}\`\nFrom: \`${client.tag} (ID: ${client.id})\`\n${MessageHelper.displayOrderItems(order.items)}\nCost: ${coupon ? `~~\`${orderCost.toFixed(2)}€\`~~ ` : ``}\`${discountCost.toFixed(2)}€\`${couponMsg ? couponMsg : ''}`)
+
+		let notifyMsg = !cancelled ? `\n\nDyron will be in touch shortly to discuss the commission and agree on a contract. If you wish to cancel this order, use \`/emotes order view\`.` : ``;
 
 		// Send receipt to client
 		const receiptEmbed = new CustomEmbed(interaction, client)
-		.setTitle(`Your order confirmation`)
-		.setDescription(`ID: \`#${order.order_id}\`\n${MessageHelper.displayOrderItems(order.items)}\nCost: ${coupon ? `~~\`${orderCost.toFixed(2)}€\`~~ ` : ``}\`${discountCost.toFixed(2)}€\`\n\nDyron will be in touch shortly to discuss the commission and agree on a contract. If you wish to cancel this order, please let them know directly.`)
+		.setTitle(cancelled ? `This order has been cancelled ❌` : `Your order confirmation`)
+		.setDescription(`ID: \`#${order.order_id}\`\n${MessageHelper.displayOrderItems(order.items)}\nCost: ${coupon ? `~~\`${orderCost.toFixed(2)}€\`~~ ` : ``}\`${discountCost.toFixed(2)}€\`${couponMsg ? couponMsg : ''}${notifyMsg}`)
 
 		try {
 			await admin.send({ embeds: [orderEmbed] });
@@ -193,6 +218,43 @@ module.exports = class MessageHelper {
 			msg += `- ${DbOrder.orderNames[item.size]} ${orderType.name} Emotes\n`;
 		}
 		return msg;
+	}
+
+	/**
+	 * Display summary of an order's items in a list
+	 * @param {Array} items
+	 */
+	static displayOrderItemsSummary(items) {
+		let msg = ``;
+		for(const item of items) {
+			const orderType = DbOrder.getItemData(item.type);
+			msg += `x${DbOrder.orderAmounts[item.size]} ${orderType.name}, `;
+		}
+		msg = msg.slice(0, msg.length - 2);
+		if(msg.length > 50) msg = `${msg.slice(0, 50)}...`;
+		return msg;
+	}
+
+	/**
+	 * Display an order in an embed
+	 * @param {CommandInteraction} interaction - User's interaction with the bot  
+	 * @param {Orders} order - The order being viewed
+	 * @param {Array} orderItems - The list of items in the order
+	 */
+	static async displayOrderEmbed(interaction, order, orderItems) {
+		const clientUser = await interaction.client.users.fetch(order.user_id);
+		
+		const orderCost = DbOrder.getTotalOrderCost(orderItems);
+		const coupon = order.coupon_id ? await Coupons.findOne({ where: { coupon_id : order.coupon_id } }) : null; 
+		const couponMsg = coupon ? `\`${coupon.emoji} ${coupon.name}\`` : ``;
+		const discountCost = coupon ? DbOrder.getOrderDiscount(orderCost, coupon) : orderCost;
+		const discountMsg = coupon ? `~~\`${orderCost.toFixed(2)}€\`~~ ` : ``;
+
+		const viewOrderEmbed = new CustomEmbed(interaction)
+        .setTitle(`Order #${order.order_id}`)
+        .setDescription(`Placed by: \`${clientUser.tag}\`\nStatus: \`${order.status}\`\nPrice: ${discountMsg}\`${discountCost}€\`\nCoupon Used: ${couponMsg}\n\n__**Items:**__\n${MessageHelper.displayOrderItems(orderItems)}`)
+	
+		return viewOrderEmbed;
 	}
 
 }

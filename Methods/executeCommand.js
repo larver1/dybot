@@ -13,7 +13,6 @@ module.exports = {
 		} catch (error) {
 			console.error(error);
 			await interaction.editReply({ content: 'There was an error while executing this command! Please report this error.', ephemeral: true });
-			await dbAccess.add(interaction.user.id, "paused", 0);
 		}
     }
 }
