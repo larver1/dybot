@@ -17,13 +17,16 @@ module.exports = (sequelize, DataTypes) => {
         type: {
             type: DataTypes.ENUM('sketch', 'lineart', 'colorblack', 'colorcolor', 'animated'),
             allowNull: false,
-            defaultValue: 'sketch'
         },
 		size: {
             type: DataTypes.ENUM('small', 'medium', 'large', 'xl'),
             allowNull: false,
-            defaultValue: 'small'
-        }
+        },
+		express: {
+			type: DataTypes.BOOLEAN,
+			allowNull: false,
+			defaultValue: false
+		}
 	}, {
 		timestamps: true,
 		indexes: [

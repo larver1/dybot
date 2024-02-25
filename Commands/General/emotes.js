@@ -136,6 +136,9 @@ module.exports = {
         const user = await DbUser.findUser(interaction.user.id);
         if(!user) throw new Error(`No user is found with ID ${interaction.user.id}`);
 
+        if (await DbOrder.getNumOrdersInProgress() >= 10)
+            return interaction.editReply({ content: `Sorry, there are no order slots currently available. Be sure to to routinely use \`/commissions\` to check when an order slot is available.`});
+
         const addId = uuidv4();
         const confirmId = uuidv4();
         const cancelId = uuidv4();

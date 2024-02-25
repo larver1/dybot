@@ -2,6 +2,7 @@ const { Orders, OrderItems, Coupons } = require('../Database/Objects');
 const fs = require('fs');
 const itemTypes = JSON.parse(fs.readFileSync('./Objects/ItemTypes.json'));
 const DbUser = require('../Helpers/DbUser.js');
+const { Op } = require("sequelize");
 
 /**
  * Interface for performing DB operations to a user.
@@ -27,6 +28,11 @@ module.exports = class DbOrder {
         'medium': 'Medium (x3)',
         'large': 'Large (x6)',
         'xl': 'Extra Large (x10)'
+    };
+
+    static orderStatusEmotes = {
+        received: '<:todo:1211344249153519676>',
+        started: '<:progress:1211344250311278683>'
     };
 
     /**
@@ -56,6 +62,32 @@ module.exports = class DbOrder {
         // Remove coupon from user
         if(coupon) await user.removeCoupon(coupon, 1);        
         return order;
+    }
+
+    /**
+     * Returns all orders that are either received or doing
+     */
+    static async getOrdersInProgress() {
+        const orders = await Orders.findAll({ where: {
+            status: {
+                [Op.in]: ['received', 'started'],
+            }  
+        }, order: [['createdAt', 'ASC']] });
+
+        return orders;
+    }
+
+    /**
+     * Returns number of orders that are either received or doing
+     */
+    static async getNumOrdersInProgress() {
+        const orders = await Orders.count({ where: {
+            status: {
+                [Op.in]: ['received', 'started'],
+            }  
+        }});
+        
+        return orders;
     }
 
     /**

@@ -246,7 +246,7 @@ module.exports = class MessageHelper {
 		
 		const orderCost = DbOrder.getTotalOrderCost(orderItems);
 		const coupon = order.coupon_id ? await Coupons.findOne({ where: { coupon_id : order.coupon_id } }) : null; 
-		const couponMsg = coupon ? `\`${coupon.emoji} ${coupon.name}\`` : ``;
+		const couponMsg = coupon ? `\`${coupon.emoji} ${coupon.name}\`` : `None`;
 		const discountCost = coupon ? DbOrder.getOrderDiscount(orderCost, coupon) : orderCost;
 		const discountMsg = coupon ? `~~\`${orderCost.toFixed(2)}€\`~~ ` : ``;
 
