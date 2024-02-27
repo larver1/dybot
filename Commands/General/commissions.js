@@ -26,6 +26,7 @@ module.exports = {
      */
     async viewCommissions(interaction) {
         const currentOrders = await DbOrder.getOrdersInProgress();
+        const expressItems = await DbOrder.getExpressItems();
         let msg = ``;
 
         for(let i = 0; i < 10; i++) {
@@ -40,7 +41,15 @@ module.exports = {
 
         msg += `### Express Delivery\n`;
         for(let i = 0; i < 3; i++) {
-            msg += `${i}. Free Spot\n`;
+            const item = expressItems[i];
+            if(item) {
+                const order = await DbOrder.getItemOrder(item);
+                const userId = order.user_id;
+                const clientUser = await interaction.client.users.fetch(userId);
+                msg += `${i}. ${DbOrder.orderStatusEmotes[order.status]} \`${clientUser.tag}\`\n`;
+            } else {
+                msg += `${i}. \n`;
+            }
         }
 
         const commissionsEmbed = new CustomEmbed(interaction)

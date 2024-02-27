@@ -54,7 +54,8 @@ module.exports = class DbOrder {
             const orderItem = await OrderItems.create({
                 order_id: order.order_id,
                 type: item.type,
-                size: item.size
+                size: item.size,
+                express: item.express ? item.express : false
             });
             order.items.push(orderItem);
         }
@@ -91,6 +92,44 @@ module.exports = class DbOrder {
     }
 
     /**
+     * Returns ongoing express items
+     */
+    static async getExpressItems() {
+        const orders = await this.getOrdersInProgress();
+        let items = [];
+        
+        // Get all ongoing order items
+        for(const order of orders) {
+            const orderItems = await order.getItems();
+
+            // Count number of express items
+            const expressItems = orderItems.filter(item => item.express);
+            items.push(...expressItems);
+        }
+
+        return items;
+    }
+
+    /**
+     * Returns number of express items that are part of in-progress orders
+     */
+    static async getNumExpressSlotsAvailable() {
+        const orders = await this.getOrdersInProgress();
+        let numExpress = 0;
+        
+        // Get all ongoing order items
+        for(const order of orders) {
+            const items = await order.getItems();
+
+            // Count number of express items
+            const expressItems = items.filter(item => item.express);
+            numExpress += expressItems.length;
+        }
+
+        return Math.max(3 - numExpress, 0);
+    }
+
+    /**
      * Total cost of every item in an order
      * @param {Array} items - Items in the order 
      */
@@ -99,7 +138,7 @@ module.exports = class DbOrder {
         for(const item of items) {
             const itemData = DbOrder.getItemData(item.type);
             const itemPrice = DbOrder.getItemPrice(itemData, item.size);
-            cost += itemPrice.cost;
+            cost += itemPrice.cost * (item.express ? 2 : 1);
         }
         return cost;
     }
@@ -130,6 +169,15 @@ module.exports = class DbOrder {
      */
     static getItemPrice(itemData, size) {
 		return itemData.prices.find(prices => (prices.size == size) || (DbOrder.orderSizes[prices.size] == size));
+    }
+
+    /**
+     * Finds item's order and returns it
+     * @param {Items} item - Item to check
+     */
+    static async getItemOrder(item) {
+        const order = await Orders.findOne({ where: { order_id: item.order_id }});
+        return order;
     }
 
     /**

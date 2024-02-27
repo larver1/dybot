@@ -18,9 +18,10 @@ module.exports = class MessageHelper {
      * @param {CommandInteraction} interaction - A user's interaction with the bot
      * @param {string} type - The type of warning message to show
      * @param {Object} data - The values relevant to the warning message
+	 * @param {Message} editMsg - If non-null, the interaction wont be replied to and the passed in message will be edited instead
      * @returns 
      */
-    static async warnMessage(interaction, type, data) {
+    static async warnMessage(interaction, type, data, editMsg) {
 		let acceptId = uuidv4();
         let declineId = uuidv4();
 		let content = ' ';
@@ -50,6 +51,11 @@ module.exports = class MessageHelper {
 				.setTitle(`Are you sure you want to cancel this order?`)
 				.setDescription(`Any coupons you used will be refunded back to you.`)
 				break;
+			case "express":
+				warning = new CustomEmbed(interaction)
+				.setTitle(`Would you like to add Express Delivery to this item?`)
+				.setDescription(`There are currently **${data.numExpress}** Express Slot(s) available.\n\nBy paying double the cost of this item (${data.itemPrice.toFixed(2)}€ x 2 = ${(data.itemPrice * 2).toFixed(2)}€), you can guarantee that this item will be delivered within **5 working days.**`)
+				break;
 			default:
                 throw new Error('No valid type passed in warn message.');
         }
@@ -69,7 +75,10 @@ module.exports = class MessageHelper {
 		const row = new ActionRowBuilder().addComponents(declineButton, acceptButton);
 		const components = [row];
 		
-		const interactionReply = await interaction.editReply({ content: content, embeds: embeds, components: components }).catch(e => console.log(e));
+		let interactionReply;
+		if(editMsg) interactionReply = await editMsg.edit({ content: content, embeds: embeds, components: components }).catch(e => console.log(e));
+		else interactionReply = await interaction.editReply({ content: content, embeds: embeds, components: components }).catch(e => console.log(e));
+
 		const filter = i => (i.user.id === interaction.user.id) && (i.customId == acceptId || i.customId == declineId);
 		const collector = await interactionReply.createMessageComponentCollector({ filter, time: 60000, errors: ['time'], max: 1 });
         
@@ -86,8 +95,8 @@ module.exports = class MessageHelper {
 
 		collector.on('end', async collected => {
 			if(collected.size <= 0) {
-				await dbAccess.add(interaction.user.id, "paused", 0);
-				await interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+				if(editMsg) await editMsg.edit({ content: "The command timed out.", components: [] }).catch(e => console.log(e));
+				else await interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
 				return;
 			}
 		});
@@ -161,7 +170,7 @@ module.exports = class MessageHelper {
 		let couponMsg;
 		if(coupon) {
 			if(cancelled) couponMsg = `\n\nThe ${coupon.emoji} ${coupon.name} Coupon has been given back.`;
-			else couponMsg = `\n\nA ${coupon.emoji} ${coupon.name} Coupon was used on this order.`;
+			else couponMsg = `\n\n${coupon.emoji} ${coupon.name} Coupon was used on this order.`;
 		}
 
 		// Send notification to admin
@@ -215,7 +224,7 @@ module.exports = class MessageHelper {
 		let msg = ``;
 		for(const item of items) {
 			const orderType = DbOrder.getItemData(item.type);
-			msg += `- ${DbOrder.orderNames[item.size]} ${orderType.name} Emotes\n`;
+			msg += `- ${DbOrder.orderNames[item.size]} ${orderType.name} Emotes ${item.express ? `(⏩ Express)` : ``} \n`;
 		}
 		return msg;
 	}

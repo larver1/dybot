@@ -128,10 +128,8 @@ module.exports = {
     /**
      * Allows user to order
      * @param {CommandInteraction} interaction - User's interaction with the bot
-     * @param {string} type - The type of emote being ordered
-     * @param {Integer} amount - The number of emotes being ordered
      */
-    async order(interaction, type, amount) {
+    async order(interaction) {
 
         const user = await DbUser.findUser(interaction.user.id);
         if(!user) throw new Error(`No user is found with ID ${interaction.user.id}`);
@@ -199,7 +197,7 @@ module.exports = {
                 await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.log(e));            }
 
                 // Follow up message
-                await this.addItem(interaction, components, collector);
+                await this.addItem(interaction, components, collector, orderItems);
 
         });
 
@@ -220,8 +218,9 @@ module.exports = {
      * @param {CommandInteraction} interaction - User's interaction with the bot
      * @param {Array} orderMessageComponents - Message components
      * @param {Collector} orderCollector - The message collector of the order message
+     * @param {Array} orderItems - The object containing the order items
      */
-    async addItem(interaction, orderMessageComponents, orderCollector) {
+    async addItem(interaction, orderMessageComponents, orderCollector, orderItems) {
 
         // Get all order types
         const selectOrderTypes = MessageHelper.getGenericSelectMenu(itemTypes.map((order) => ({ name: order.name, value: order.value }) ))[0];
@@ -287,26 +286,68 @@ module.exports = {
             else if(i.customId == orderAmountId) {
                 currentOrderAmount = i.values[0];
             } 
-            else if(i.customId == confirmId || i.customId == cancelId) {
+            else if(i.customId == confirmId) {
                 // If confirming, add item to list
                 if(i.customId == confirmId) {
                     if(!currentOrderType || !currentOrderAmount) {
                         return interactionReply.edit({ content: `You must select an order type and order amount before confirming. `}).catch(e => console.log(e));
                     } else {
-                        orderCollector.emit('addItem', { type: currentOrderType, size: currentOrderAmount });
+                        const numExpress = await DbOrder.getNumExpressSlotsAvailable();
+                        const numExpressOrdered = orderItems.filter(item => item.express).length;
+                        const numExpressLeft = numExpress - numExpressOrdered;
+                        if(numExpress - numExpressOrdered > 0) {
+                            await this.confirmExpressItem(i, currentOrderType, currentOrderAmount, orderCollector, numExpressLeft, collector);
+                            return;
+                        } else {
+                            orderCollector.emit('addItem', { type: currentOrderType, size: currentOrderAmount, express: false });
+                            collector.emit('finish');
+                        }
                     }
-                }
-
-                // Delete message and reactivate order buttons
-                MessageHelper.activateButtons(orderMessageComponents, true);
-                await interactionReply.delete().catch(e => console.log(e));
-                await interaction.editReply({ components: orderMessageComponents }).catch(e => console.log(e));
-            
+                }      
             }
+            else if(i.customId == cancelId) {
+                collector.emit('finish');
+            }
+        });
+
+        collector.on('finish', async () => {
+            // Delete message and reactivate order buttons
+            MessageHelper.activateButtons(orderMessageComponents, true);
+            await interactionReply.delete().catch(e => console.log(e));
+            await interaction.editReply({ components: orderMessageComponents }).catch(e => console.log(e));
+        })
+    },
+    /**
+     * Asks user if they wish to make their item express
+     * @param {CommandInteraction} interaction - User's interaction with the bot
+     * @param {string} orderType - The type of order being added
+     * @param {string} orderSize - The size of order being added
+     * @param {Collector} orderCollector - The message collector of the order message
+     * @param {Integer} numExpress - The number of express slots left
+     * @param {Collector} itemCollector - The message collector of the add item message
+     */
+    async confirmExpressItem(interaction, orderType, orderSize, orderCollector, numExpress, itemCollector) {
+
+        const itemData = DbOrder.getItemData(orderType);
+        const itemPrice = DbOrder.getItemPrice(itemData, orderSize);
+
+        const warnCollector = await MessageHelper.warnMessage(interaction, "express", { 
+            numExpress: numExpress,
+            itemPrice: itemPrice.cost
+        });
+
+        warnCollector.on('confirmed', async i => {
+            orderCollector.emit('addItem', { type: orderType, size: orderSize, express: true });
+            itemCollector.emit('finish');
+        });
+
+        warnCollector.on('declined', async i => {
+            orderCollector.emit('addItem', { type: orderType, size: orderSize, express: false });
+            itemCollector.emit('finish');
         });
     },
     /**
-     * 
+     * Asks the user to select a coupon
      * @param {CommandInteraction} interaction - User's interaction with the bot
      * @param {Users} user - User fetched from DB
      * @param {Array} orderItems - Array of items added to the order 
@@ -367,6 +408,15 @@ module.exports = {
         });
 
         warnCollector.on('confirmed', async i => {
+            const numExpressOrdered = orderItems.filter(item => item.express).length;
+            const numExpressAvailable = await DbOrder.getNumExpressSlotsAvailable();
+
+            // Don't let user order something if capacity has changed since starting the order
+            if(numExpressOrdered < numExpressAvailable)
+                return interaction.editReply({ content: `Sorry, it appears that one or more express slots have been taken since starting your order. Please redo your order.` }).catch(e => console.log(e));
+            if(await DbOrder.getNumOrdersInProgress() >= 10)
+                return interaction.editReply({ content: `Sorry, it appears that the maximum number of orders has been reached since starting your oder. Please check \`/commissions\` routinely and wait for a spot to become vacant.` }).catch(e => console.log(e));
+
             const order = await DbOrder.createOrder(user, orderItems, coupon ? coupon.coupon : null);
             order.items = await order.getItems();
             await MessageHelper.sendOrderDM(interaction, order);
