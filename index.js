@@ -1,5 +1,7 @@
 const { ClusterManager, ReClusterManager, HeartbeatManager } = require('discord-hybrid-sharding');
 const { token } = require('./config.json');
+const { Users } = require('./Database/Objects');
+const { Op } = require("sequelize");
 
 /**
  * Main file which spawns multiple Discord clients (shards) to handle traffic across many servers
@@ -47,7 +49,25 @@ manager.on('clusterCreate', async cluster => {
 
 // Spawn clients with specified options
 async function start() {
+	await unpauseUsers();
 	await manager.spawn({ delay: 7000, timeout: 60000 }).catch(e => console.log(e));   
+}
+
+async function unpauseUsers() {
+	console.log("Unpausing users");
+	await Users.findAll({
+		where: {
+			paused: {
+				[Op.eq]: true
+			}
+		}
+	}).then(async function(DBUsers) {
+		for (let i = 0; i < DBUsers.length; i++) {
+			const user = DBUsers[i];
+			user.paused = false;
+			user.save();
+		}
+	});
 }
 
 // Called when dev command "/restart" is used

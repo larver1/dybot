@@ -51,6 +51,12 @@ module.exports = class MessageHelper {
 				.setTitle(`Are you sure you want to cancel this order?`)
 				.setDescription(`Any coupons you used will be refunded back to you.`)
 				break;
+			case "progress":
+				const newStatus = data.status == 'received' ? 'started' : 'complete';
+				warning = new CustomEmbed(interaction)
+				.setTitle(`Are you sure you want to progress this order to \`${newStatus}\`?`)
+				.setDescription(`You will not be able to change it back afterwards.`)
+				break;
 			case "express":
 				warning = new CustomEmbed(interaction)
 				.setTitle(`Would you like to add Express Delivery to this item?`)
@@ -92,14 +98,6 @@ module.exports = class MessageHelper {
 			else if(i.customId == cancelId)
 				collector.emit('cancelled');
         });
-
-		collector.on('end', async collected => {
-			if(collected.size <= 0) {
-				if(editMsg) await editMsg.edit({ content: "The command timed out.", components: [] }).catch(e => console.log(e));
-				else await interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
-				return;
-			}
-		});
 
 		return collector;
 	}
@@ -156,9 +154,9 @@ module.exports = class MessageHelper {
 	 * Send the admin and the user a confirmation of a new order
 	 * @param {CommandInteraction} interaction - User's interaction with the bot 
 	 * @param {Orders} order - The order that was just created
-	 * @param {Boolean} cancelled - Whether the order is being cancelled 
+	 * @param {String} status - The new status of the order 
 	 */
-	static async sendOrderDM(interaction, order, cancelled) {
+	static async sendOrderDM(interaction, order, status) {
         const client = await interaction.client.users.fetch(order.user_id);
         const admin = await interaction.client.users.fetch(interaction.client.config.adminId);
 		if(!client || !admin) throw new Error('Client or Admin users could not be found.');
@@ -169,21 +167,29 @@ module.exports = class MessageHelper {
 
 		let couponMsg;
 		if(coupon) {
-			if(cancelled) couponMsg = `\n\nThe ${coupon.emoji} ${coupon.name} Coupon has been given back.`;
+			if(status == 'cancelled') couponMsg = `\n\nThe ${coupon.emoji} ${coupon.name} Coupon has been given back.`;
 			else couponMsg = `\n\n${coupon.emoji} ${coupon.name} Coupon was used on this order.`;
 		}
 
 		// Send notification to admin
 		const orderEmbed = new CustomEmbed(interaction, admin)
-		.setTitle(cancelled ? `This order has been cancelled ❌` : `You received a New Order! 🥳`)
 		.setDescription(`ID: \`#${order.order_id}\`\nFrom: \`${client.tag} (ID: ${client.id})\`\n${MessageHelper.displayOrderItems(order.items)}\nCost: ${coupon ? `~~\`${orderCost.toFixed(2)}€\`~~ ` : ``}\`${discountCost.toFixed(2)}€\`${couponMsg ? couponMsg : ''}`)
 
-		let notifyMsg = !cancelled ? `\n\nDyron will be in touch shortly to discuss the commission and agree on a contract. If you wish to cancel this order, use \`/emotes order view\`.` : ``;
+		if(order.status == 'cancelled') orderEmbed.setTitle(`This order has been cancelled! ❌`);
+		else if(order.status == 'received') orderEmbed.setTitle(`You received a New Order! 🥳`);
+		else if(order.status == 'complete') orderEmbed.setTitle(`This order has been completed! ✅`)
+		else if(order.status == 'started') orderEmbed.setTitle(`This order is now in progress! 🔃`)
+
+		let notifyMsg = status == 'received' ? `\n\nDyron will be in touch shortly to discuss the commission and agree on a contract. If you wish to cancel this order, use \`/emotes order view\`.` : ``;
 
 		// Send receipt to client
 		const receiptEmbed = new CustomEmbed(interaction, client)
-		.setTitle(cancelled ? `This order has been cancelled ❌` : `Your order confirmation`)
 		.setDescription(`ID: \`#${order.order_id}\`\n${MessageHelper.displayOrderItems(order.items)}\nCost: ${coupon ? `~~\`${orderCost.toFixed(2)}€\`~~ ` : ``}\`${discountCost.toFixed(2)}€\`${couponMsg ? couponMsg : ''}${notifyMsg}`)
+
+		if(order.status == 'cancelled') receiptEmbed.setTitle(`This order has been cancelled! ❌`);
+		else if(order.status == 'received') receiptEmbed.setTitle(`Your order confirmation`);
+		else if(order.status == 'complete') receiptEmbed.setTitle(`This order has been completed! ✅`)
+		else if(order.status == 'started') receiptEmbed.setTitle(`This order is now in progress! 🔃`)
 
 		try {
 			await admin.send({ embeds: [orderEmbed] });
@@ -224,7 +230,7 @@ module.exports = class MessageHelper {
 		let msg = ``;
 		for(const item of items) {
 			const orderType = DbOrder.getItemData(item.type);
-			msg += `- ${DbOrder.orderNames[item.size]} ${orderType.name} Emotes ${item.express ? `(⏩ Express)` : ``} \n`;
+			msg += `- ${DbOrder.orderNames[item.size]} ${orderType.name} Emotes ${item.express ? `\n - ⏩ Express Delivery` : ``} \n`;
 		}
 		return msg;
 	}
@@ -264,6 +270,36 @@ module.exports = class MessageHelper {
         .setDescription(`Placed by: \`${clientUser.tag}\`\nStatus: \`${order.status}\`\nPrice: ${discountMsg}\`${discountCost}€\`\nCoupon Used: ${couponMsg}\n\n__**Items:**__\n${MessageHelper.displayOrderItems(orderItems)}`)
 	
 		return viewOrderEmbed;
+	}
+
+	/**
+     * Helper function to align each item evenly on the screen so that they have the same number of characters
+     * @param {string} string - The item name which determines how much padding to use
+	 * @param {Integer} numSpaces - The number of spaces to use
+     */
+	static padString(string, numSpaces) {
+		let numChars = numSpaces ? numSpaces : 18;
+		numChars -= string.length;
+		let spaces = "";
+
+		// For each remaining character, add a space to reach the character limit
+		for(var i = 0; i < numChars; i++) 
+			spaces += " ";
+		
+		return spaces;
+	}
+
+	/**
+	 * Helper function to align each item on the screen so that they have the same number of characters
+	 * @param {string} string - The item which determines how much padding to use
+	 * @param {Integer} numSpaces - The number of spaces to use
+	 */
+	static extraPadding(string, numSpaces) {
+		let spaces = "";
+		let alignedSpace = numSpaces ? numSpaces : 4;
+
+		for(var i = string.length; i < alignedSpace; i++) spaces += " ";
+		return spaces;
 	}
 
 }

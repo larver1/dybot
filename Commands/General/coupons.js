@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const CustomEmbed = require('../../Helpers/CustomEmbed.js');
+const MessageHelper = require('../../Helpers/CustomEmbed.js');
 const DbUser = require('../../Helpers/DbUser.js');
 const fs = require('fs');
 const couponData = JSON.parse(fs.readFileSync('./Objects/Coupons.json'));
@@ -33,8 +34,9 @@ module.exports = {
                 .setRequired(true)
             )
         ),
+    help: 'Allows you to view all types of coupon and redeem one in exchange for virtual currency. You may check your balance and coupons using \`/profile\`.\n- \`/coupons view\`: View each type of coupon and the amount of virtual money it costs.\n- \`/coupons buy\`: Redeem a coupon of a certain type in exchange for virtual currency.',
 	/**
-	 * Direct the user two various commands to help them learn.
+	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
 	 */
 	async execute(interaction) {
@@ -47,6 +49,7 @@ module.exports = {
         } else if(subCommand == 'buy') {
             const type = interaction.options.getString('type');
             const amount = interaction.options.getInteger('amount');
+            user.pause();
             this.buyCoupon(interaction, user, type, amount);
         } else {
             throw new Error(`Coupons subcommand is invalid! Got ${subCommand}`);
@@ -60,7 +63,7 @@ module.exports = {
     async viewCoupons(interaction, user) {
 		const coupons = await Coupons.findAll();
         let msg = `${user.balance} DyDots\n \`/coupons buy\` to buy an item.\n\n`;
-        msg += `${coupons.map(i => `${i.emoji} \`${i.name} ${this.padString(i.name)} ${i.cost}${this.extraPadding(i.cost)}\``).join('\n')}`;
+        msg += `${coupons.map(i => `${i.emoji} \`${i.name} ${MessageHelper.padString(i.name)} ${i.cost}${MessageHelper.extraPadding(i.cost)}\``).join('\n')}`;
         
         const shopEmbed = new CustomEmbed(interaction)
         .setTitle('Coupons to Redeem')
@@ -79,40 +82,21 @@ module.exports = {
         const couponType = await Coupons.findOne({ where: { name: type }});
         if(!couponType) throw new Error(`Did not pass in valid coupon type. Received ${type}`);
 
-        if(amount <= 0) return interaction.editReply(`You must input a number of 1 or higher`);
+        if(amount <= 0) {
+            user.unpause();
+            return interaction.editReply(`You must input a number of 1 or higher`);
+        }
+
         const cost = couponType.getDataValue('cost') * parseInt(amount);
 
         if(!(await user.takeMoney(cost))) {
+            user.unpause();
             return interaction.editReply(`You do not have enough DyDots to redeem \`x${amount} ${type}\``).catch(e => console.log(e));
         }
 
         await user.addCoupon(couponType, amount);
+
+        user.unpause();
         return interaction.editReply(`You have successfully redeemed x${amount} ${type} for 💰${cost.toLocaleString('en-US', { style: 'decimal' })}`);
-    },
-    /**
-     * Helper function to align each item name evenly on the screen so that they have the same number of characters
-     * @param {string} string - The item name which determines how much padding to use
-     */
-    padString(string) {
-        let numChars = 18;
-        numChars -= string.length;
-        let spaces = "";
-
-        // For each remaining character, add a space to reach the character limit
-        for(var i = 0; i < numChars; i++) 
-            spaces += " ";
-        
-        return spaces;
-    },
-    /**
-     * Helper function to align each item cost on the screen so that they have the same number of characters
-     * @param {string} string - The item cost which determines how much padding to use
-     */
-    extraPadding(string) {
-        let spaces = "";
-        let alignedSpace = 4;
-
-        for(var i = string.length; i < alignedSpace; i++) spaces += " ";
-        return spaces;
     }
 }

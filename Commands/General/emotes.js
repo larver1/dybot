@@ -33,8 +33,9 @@ module.exports = {
                 view.setName('view')
                 .setDescription('View your orders.'))
         ),
+    help: `Allows you to see the different types of emotes you can order, manage your current orders and create new ones.\n- \`/emotes options\`: See all the types of emote you can order and their respective prices.\n- \`/emotes order create\`: Allows you to create an order and add items to it, and apply coupons if you have any that apply.\n- \`/emotes order view\`: Allows you to check the status of your orders and cancel them if not started.`,
 	/**
-	 * Direct the user two various commands to help them learn.
+	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
 	 */
 	async execute(interaction) {
@@ -112,6 +113,12 @@ module.exports = {
 
             await interaction.editReply({ embeds: [emotesEmbed], components: [nextPage] }).catch(e => console.log(e));
         });
+
+        collector.on('end', async collected => {
+			if(collected.size <= 0) {
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+			}
+        });
     },
     /**
      * Checks value of order and verifies which coupons would be applicable
@@ -137,6 +144,7 @@ module.exports = {
         if (await DbOrder.getNumOrdersInProgress() >= 10)
             return interaction.editReply({ content: `Sorry, there are no order slots currently available. Be sure to to routinely use \`/commissions\` to check when an order slot is available.`});
 
+        user.pause();
         const addId = uuidv4();
         const confirmId = uuidv4();
         const cancelId = uuidv4();
@@ -179,6 +187,7 @@ module.exports = {
             await i.deferUpdate().catch(e => {console.log(e)});
             if(i.customId == cancelId) {
                 collector.stop();
+                user.unpause();
                 return interaction.editReply({ content: `The order has been cancelled.`, components: [] }).catch(e => console.log(e));
             } else if(i.customId == confirmId) {
                 if(!orderItems.length) {
@@ -212,6 +221,12 @@ module.exports = {
             await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.log(e));
         });
 
+        collector.on('end', async collected => {
+			if(collected.size <= 0) {
+                if(user) user.unpause();
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+			}
+        });
     },
     /**
      * Add an item to an order
@@ -315,7 +330,13 @@ module.exports = {
             MessageHelper.activateButtons(orderMessageComponents, true);
             await interactionReply.delete().catch(e => console.log(e));
             await interaction.editReply({ components: orderMessageComponents }).catch(e => console.log(e));
-        })
+        });
+
+        collector.on('end', async collected => {
+			if(collected.size <= 0) {
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+			}
+        });
     },
     /**
      * Asks user if they wish to make their item express
@@ -344,6 +365,12 @@ module.exports = {
         warnCollector.on('declined', async i => {
             orderCollector.emit('addItem', { type: orderType, size: orderSize, express: false });
             itemCollector.emit('finish');
+        });
+
+        warnCollector.on('end', async collected => {
+			if(collected.size <= 0) {
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+			}
         });
     },
     /**
@@ -388,10 +415,10 @@ module.exports = {
         });
 
         collector.on('end', async collected => {
-            if(collected.size <= 0) {
-                await interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
-                return;
-            }
+			if(collected.size <= 0) {
+                if(user) user.unpause();
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+			}
         });
     },
     /**
@@ -412,19 +439,31 @@ module.exports = {
             const numExpressAvailable = await DbOrder.getNumExpressSlotsAvailable();
 
             // Don't let user order something if capacity has changed since starting the order
-            if(numExpressOrdered < numExpressAvailable)
+            if(numExpressOrdered > numExpressAvailable) {
                 return interaction.editReply({ content: `Sorry, it appears that one or more express slots have been taken since starting your order. Please redo your order.` }).catch(e => console.log(e));
-            if(await DbOrder.getNumOrdersInProgress() >= 10)
+            }
+            if(await DbOrder.getNumOrdersInProgress() >= 10) {
+                user.unpause();
                 return interaction.editReply({ content: `Sorry, it appears that the maximum number of orders has been reached since starting your oder. Please check \`/commissions\` routinely and wait for a spot to become vacant.` }).catch(e => console.log(e));
+            }
 
             const order = await DbOrder.createOrder(user, orderItems, coupon ? coupon.coupon : null);
             order.items = await order.getItems();
             await MessageHelper.sendOrderDM(interaction, order);
+            user.unpause();
             await interaction.editReply({ content: `Your order has been created successfully, you will receive a DM with the receipt. Dyron has also been notified of the order and will be in touch shortly.`, embeds: [], components: [] }).catch(e => console.log(e));
         });
 
         warnCollector.on('declined', async i => {
+            user.unpause();
             return interaction.editReply({ content: `The order has been cancelled.`, embeds: [], components: [] }).catch(e => console.log(e));
+        });
+
+        warnCollector.on('end', async collected => {
+			if(collected.size <= 0) {
+                if(user) user.unpause();
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+			}
         });
     },
     /**
@@ -432,13 +471,26 @@ module.exports = {
      * @param {CommandInteraction} interaction - User's interaction with the bot  
      */
     async viewOrders(interaction) {
-        const orders = await DbOrder.getUserOrders(interaction.user.id, true);
+        const isAdmin = interaction.client.config.adminId == interaction.user.id;
+        const orders = isAdmin ? await DbOrder.getOrdersInProgress(true) : await DbOrder.getUserOrders(interaction.user.id, true);
         const selectOrders = MessageHelper.getGenericSelectMenu(orders.map(order =>  ({ name: `Order #${order.order_id}: ${order.status}`, description: `${MessageHelper.displayOrderItemsSummary(order.items)}` })));
         const selectId = uuidv4();
         const prevPageId = uuidv4();
         const nextPageId = uuidv4();
         const cancelId = uuidv4();
+        const progressId = uuidv4();
         const maxPages = selectOrders.length - 1;
+     
+        const states = {
+            received: {
+                emoji: DbOrder.orderStatusEmotes['received'],
+                label: 'Start Order'
+            },
+            started: {
+                emoji: DbOrder.orderStatusEmotes['started'],
+                label: 'Complete Order'
+            }
+        };
 
         let page = 0;
         let orderIndex, order, viewOrderEmbed;
@@ -452,6 +504,15 @@ module.exports = {
                 .setMinValues(1)
                 .setMaxValues(1),  
         );
+
+        const progressButton = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId(progressId)
+                .setLabel(states['received'].label)
+                .setEmoji(states['received'].emoji)
+                .setStyle(ButtonStyle.Primary)
+        )
 
         const nextPage = new ActionRowBuilder()
         .addComponents(			
@@ -475,8 +536,14 @@ module.exports = {
                     .setStyle(ButtonStyle.Danger)
             )
 
-        const interactionReply = await interaction.editReply({ components: [orderTypeSelectMenu, nextPage] }).catch(e => console.log(e));
-        const filter = i => i.user.id === interaction.user.id && (i.customId == prevPageId || i.customId == nextPageId || i.customId == selectId || i.customId == cancelId);
+        if(!orders || !orders.length)
+            return interaction.editReply({ content: `There are no orders to view.`, embeds: [], components: [] }).catch(e => console.log(e));
+
+        const components = [];
+        components.push(orderTypeSelectMenu, nextPage);
+
+        const interactionReply = await interaction.editReply({ embeds: [], components: components }).catch(e => console.log(e));
+        const filter = i => i.user.id === interaction.user.id && (i.customId == prevPageId || i.customId == nextPageId || i.customId == selectId || i.customId == progressId || i.customId == cancelId);
         const collector = interactionReply.createMessageComponentCollector({ filter, time: 300_000, errors: ['time'] });
 
         collector.on('collect', async i => { 
@@ -487,12 +554,32 @@ module.exports = {
 			} else if(i.customId == nextPageId) {
 				if(page < maxPages) page++;
 				else page = 0;
-			} else if(i.customId == selectId) {
-                
+			} else if(i.customId == selectId) {      
                 orderIndex = parseInt(i.values);
                 order = orders[orderIndex];
 
                 viewOrderEmbed = await MessageHelper.displayOrderEmbed(interaction, order, order.items);
+            } else if(i.customId == progressId) {
+                const warnCollector = await MessageHelper.warnMessage(interaction, "progress", { status: order.status });
+                warnCollector.on('confirmed', async i => {
+                    await this.progressOrder(interaction, order);
+                    collector.stop();
+                    await this.viewOrders(interaction);
+                });
+
+                warnCollector.on('declined', async i => {
+                    const embeds = viewOrderEmbed ? [viewOrderEmbed] : null;
+                    const components = [orderTypeSelectMenu, nextPage];
+                    if(isAdmin && order && (order.status == 'received' || order.status == 'started')) {
+                        progressButton.components[0].setLabel(states[order.status].label);
+                        progressButton.components[0].setEmoji(states[order.status].emoji);
+                        components.push(progressButton);
+                    } 
+                    components.push(cancelButton);
+                    await interaction.editReply({ content: ` `, embeds: embeds, components: components }).catch(e => console.log(e));
+                    return;
+                });
+                return;
             } else if(i.customId == cancelId) {
                 const warnCollector = await MessageHelper.warnMessage(interaction, "cancel");
                 warnCollector.on('confirmed', async i => {
@@ -501,13 +588,24 @@ module.exports = {
                     // View orders again
                     collector.stop();
                     await this.viewOrders(interaction);
-
                     return;
                 });
                 warnCollector.on('declined', async i => {
                     const embeds = viewOrderEmbed ? [viewOrderEmbed] : null;
-                    await interaction.editReply({ content: ` `, embeds: embeds, components: [orderTypeSelectMenu, nextPage, cancelButton] }).catch(e => console.log(e));
+                    const components = [orderTypeSelectMenu, nextPage];
+                    if(isAdmin && order && (order.status == 'received' || order.status == 'started')) {
+                        progressButton.components[0].setLabel(states[order.status].label);
+                        progressButton.components[0].setEmoji(states[order.status].emoji);
+                        components.push(progressButton);
+                    } 
+                    components.push(cancelButton);
+                    await interaction.editReply({ content: ` `, embeds: embeds, components: components }).catch(e => console.log(e));
                     return;
+                });
+                warnCollector.on('end', async collected => {
+                    if(collected.size <= 0) {
+                        return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+                    }
                 });
                 return;
             }
@@ -523,20 +621,46 @@ module.exports = {
             );
 
             const embeds = viewOrderEmbed ? [viewOrderEmbed] : null;
-            cancelButton.components[0].setDisabled(order.status != "received");
+            if(!isAdmin) cancelButton.components[0].setDisabled(order.status != "received");
+            const components = [orderTypeSelectMenu, nextPage];
+            if(isAdmin && order && (order.status == 'received' || order.status == 'started')) {
+                progressButton.components[0].setLabel(states[order.status].label);
+                progressButton.components[0].setEmoji(states[order.status].emoji);
+                components.push(progressButton);
+            } 
+            components.push(cancelButton);
 
-            await interaction.editReply({ content: ` `, embeds: embeds, components: [orderTypeSelectMenu, nextPage, cancelButton] }).catch(e => console.log(e));
+            await interaction.editReply({ content: ` `, embeds: embeds, components: components }).catch(e => console.log(e));
     
-        })
+        });
+
+        collector.on('end', async collected => {
+			if(collected.size <= 0) {
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+			}
+        });
     },
     /**
-     * 
+     * Progresses an order
+     * @param {CommandInteraction} interaction - User's interaction with the bot 
+     * @param {Orders} order - The order to cancel 
+     */
+    async progressOrder(interaction, order) {
+        if(order.status == 'received') order.status = 'started';
+        else if(order.status == 'started') order.status = 'complete';
+        await order.save();
+
+        await MessageHelper.sendOrderDM(interaction, order, order.status);
+        await interaction.editReply({ content: `Order #${order.order_id} has been updated.` }).catch(e => console.log(e));
+    },
+    /**
+     * Cancels an order
      * @param {CommandInteraction} interaction - User's interaction with the bot 
      * @param {Orders} order - The order to cancel 
      */
     async cancelOrder(interaction, order) {
         await DbOrder.cancelOrder(order);
-        await MessageHelper.sendOrderDM(interaction, order, true);
-        await interaction.editReply({ content: `Order #${order.order_id} has been cancelled.`, embeds: [] }).catch(e => console.log(e));
+        await MessageHelper.sendOrderDM(interaction, order, 'cancelled');
+        await interaction.editReply({ content: `Order #${order.order_id} has been cancelled.` }).catch(e => console.log(e));
     }
 }

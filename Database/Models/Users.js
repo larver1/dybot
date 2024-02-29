@@ -23,10 +23,35 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 			type: DataTypes.BOOLEAN,
 			defaultValue: true,
 			allowNull: false
-		}
+		},
+		paused: {
+			type: DataTypes.INTEGER,
+			defaultValue: false,
+			allowNull: false
+		}	
 	}, {
 		timestamps: true,
 	});
+
+	/**
+	 * Pause a user
+	 * @param {string} id - User's discord ID.
+	 */
+	Users.prototype.pause = async function() {
+		this.paused = true;
+		await this.save();
+		return this;
+	}
+
+	/**
+	 * Unpause a user
+	 * @param {string} id - User's discord ID.
+	 */
+	Users.prototype.unpause = async function() {
+		this.paused = false;
+		await this.save();
+		return this;
+	}
 
 	/**
 	 * Give money to user
@@ -104,8 +129,8 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 			where: { user_id: this.user_id, coupon_id: coupon.coupon_id },
 		});
 
-		if(freq <= 0 || userCoupon.amount <= 0) 
-			throw new Error(`Cannot remove ${freq} coupons when user has ${userCoupon.amount}.`);
+		if(freq <= 0 || userCoupon.amount < freq) 
+			return null;
 		
 		if (userCoupon) {
 			if(!freq) userCoupon.amount -= 1;

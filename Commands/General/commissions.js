@@ -13,6 +13,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('commissions')
 		.setDescription('See how many order slots are open.'),
+    help: `Shows a list of all art commissions currently in progress. You may only order using \`/emotes order create\` when there is a free spot on this list.`,
 	/**
 	 * Execute command
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
@@ -48,7 +49,7 @@ module.exports = {
                 const clientUser = await interaction.client.users.fetch(userId);
                 msg += `${i}. ${DbOrder.orderStatusEmotes[order.status]} \`${clientUser.tag}\`\n`;
             } else {
-                msg += `${i}. \n`;
+                msg += `${i}. Free Spot\n`;
             }
         }
 

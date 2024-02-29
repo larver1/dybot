@@ -13,8 +13,9 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('profile')
 		.setDescription('View your DyBot profile.'),
+	help: `Displays your user data, such as your virtual balance and your coupons inventory`,
 	/**
-	 * Direct the user two various commands to help them learn.
+	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
 	 */
 	async execute(interaction) {
@@ -40,6 +41,13 @@ module.exports = {
 				user = await DbUser.createUser(interaction.user.id, false);
 				newProfileMessage = `You have chosen to be hidden from the \`/leaderboard\`. You may change this at any time using \`/leaderboard visible\`.`;
 				await this.viewProfile(interaction, user, newProfileMessage);
+			});
+
+			warnCollector.on('end', async collected => {
+				if(collected.size <= 0) {
+					if(user) user.unpause();
+					return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+				}
 			});
 		} else {
 			// If still no user even after creating it, something is wrong

@@ -1,7 +1,6 @@
-const { SlashCommandBuilder } = require('discord.js');
-const CustomEmbed = require('../../Helpers/CustomEmbed.js');
+const { SlashCommandBuilder, inlineCode } = require('discord.js');
+const MessageHelper = require('../../Helpers/MessageHelper.js');
 const DbUser = require('../../Helpers/DbUser.js');
-const { inlineCode, codeBlock } = require('discord.js');
 
 /**
  * @param {SlashCommandBuilder} data - Command data.
@@ -27,8 +26,9 @@ module.exports = {
                         { name: 'No', value: 'no'},
                     )
                     .setRequired(true))),
+    help: `Allows you to see the rankings of players ordered by their virtual balance. Also gives you the option to opt out of the leaderboard if you wish.\n- \`/leaderboard view\`: Shows the current leaderboard as well as your own ranking.\n- \`/leaderboard visible\`: Allows you to toggle your visibility on the leaderboard.`,
 	/**
-	 * Direct the user two various commands to help them learn.
+	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
 	 */
 	async execute(interaction) {
@@ -52,7 +52,8 @@ module.exports = {
         for(let i = 0; i < topUsers.length; i++) {
             if(i < 10 && topUsers[i].leaderboard) {
                 const clientUser = await interaction.client.users.fetch(topUsers[i].user_id);
-                msg += `${inlineCode(`${i + 1}. ${clientUser.tag}: 💰${topUsers[i].getDataValue('balance')} DyDots`)}`;
+                const bal = `💰${topUsers[i].getDataValue('balance')}`;
+                msg += `${inlineCode(`${i + 1}. ${clientUser.tag}${MessageHelper.padString(clientUser.tag, 32)}: ${bal}${MessageHelper.extraPadding(bal, 8)} DyDots`)}\n`;
             }
             if(topUsers[i].user_id == interaction.user.id) {
                 userPosition = i + 1;

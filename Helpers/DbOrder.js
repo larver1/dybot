@@ -67,13 +67,20 @@ module.exports = class DbOrder {
 
     /**
      * Returns all orders that are either received or doing
+     * @param {Boolean} withItems - Whether to include items in the order
      */
-    static async getOrdersInProgress() {
+    static async getOrdersInProgress(withItems) {
         const orders = await Orders.findAll({ where: {
             status: {
                 [Op.in]: ['received', 'started'],
             }  
         }, order: [['createdAt', 'ASC']] });
+
+        if(withItems) {
+            for(const order of orders) {
+                order.items = await order.getItems();
+            }
+        }
 
         return orders;
     }
