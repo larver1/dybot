@@ -1,0 +1,26 @@
+{
+  "name": "dybot",
+  "version": "1.0.0",
+  "description": "Commissioned Discord Bot for Dyron",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oliverkeen15/dybot.git"
+  },
+  "author": "Oliver Keen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/oliverkeen15/dybot/issues"
+  },
+  "homepage": "https://github.com/oliverkeen15/dybot#readme",
+  "dependencies": {
+    "discord-hybrid-sharding": "^2.1.4",
+    "discord.js": "^14.14.1",
+    "mysql2": "^3.9.1",
+    "sequelize": "^6.37.1",
+    "uuid": "^9.0.1"
+  }
+}
