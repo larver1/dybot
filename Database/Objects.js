@@ -8,7 +8,6 @@ const sequelize = new Sequelize(dbName, dbUser, dbPass, {
 	logging: false,
 	dialectOptions: {
 		connectTimeout: 20000,
-		socketPath: "/var/run/mysqld/mysqld.sock"
 	},
 	pool: {
 		max: 50,

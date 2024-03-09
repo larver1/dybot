@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const CustomEmbed = require('../../Helpers/CustomEmbed.js');
-const MessageHelper = require('../../Helpers/CustomEmbed.js');
+const MessageHelper = require('../../Helpers/MessageHelper.js');
 const DbUser = require('../../Helpers/DbUser.js');
 const fs = require('fs');
 const couponData = JSON.parse(fs.readFileSync('./Objects/Coupons.json'));
