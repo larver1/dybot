@@ -19,9 +19,9 @@ module.exports = class MessageHelper {
      * @param {string} type - The type of warning message to show
      * @param {Object} data - The values relevant to the warning message
 	 * @param {Message} editMsg - If non-null, the interaction wont be replied to and the passed in message will be edited instead
-     * @returns 
+     * @param {Boolean} noDefer - Whether to ignore deferring the interaction update 
      */
-    static async warnMessage(interaction, type, data, editMsg) {
+    static async warnMessage(interaction, type, data, editMsg, noDefer) {
 		let acceptId = uuidv4();
         let declineId = uuidv4();
 		let content = ' ';
@@ -58,9 +58,10 @@ module.exports = class MessageHelper {
 				.setDescription(`You will not be able to change it back afterwards.`)
 				break;
 			case "express":
+				const perEmotePrice = DbOrder.getPerEmotePrice(data.itemPrice);
 				warning = new CustomEmbed(interaction)
-				.setTitle(`Would you like to add Express Delivery to this item?`)
-				.setDescription(`There are currently **${data.numExpress}** Express Slot(s) available.\n\nBy paying double the cost of this item (${data.itemPrice.toFixed(2)}€ x 2 = ${(data.itemPrice * 2).toFixed(2)}€), you can guarantee that this item will be delivered within **5 working days.**`)
+				.setTitle(`Would you like to add Express Delivery to some of your emotes?`)
+				.setDescription(`There are currently **${data.numExpress}** Express Slot(s) available.\n\nBy paying an extra ${perEmotePrice.toFixed(2)}€ per emote, you can guarantee it will be delivered within **5 working days.**`)
 				break;
 			default:
                 throw new Error('No valid type passed in warn message.');
@@ -86,11 +87,11 @@ module.exports = class MessageHelper {
 		else interactionReply = await interaction.editReply({ content: content, embeds: embeds, components: components }).catch(e => console.log(e));
 
 		const filter = i => (i.user.id === interaction.user.id) && (i.customId == acceptId || i.customId == declineId);
-		const collector = await interactionReply.createMessageComponentCollector({ filter, time: 60000, errors: ['time'], max: 1 });
+		const collector = await interactionReply.createMessageComponentCollector({ filter, time: 60000, errors: ['time'], max: noDefer ? 999 : 1 });
         
 		// Emit events when either confirm or decline button is pressed
 		collector.on('collect', async i => {
-            await i.deferUpdate().catch(e => {console.log(e)});
+            if(!noDefer) await i.deferUpdate().catch(e => {console.log(e)});
 			if(i.customId == acceptId)
 				collector.emit('confirmed', i);
             else if(i.customId == declineId)
@@ -230,7 +231,9 @@ module.exports = class MessageHelper {
 		let msg = ``;
 		for(const item of items) {
 			const orderType = DbOrder.getItemData(item.type);
-			msg += `- ${DbOrder.orderNames[item.size]} ${orderType.name} Emotes ${item.express ? `\n - ⏩ Express Delivery` : ``} \n`;
+			const price = DbOrder.getItemPrice(orderType, item.size);
+			const pricePerItem = DbOrder.getPerEmotePrice(price);
+			msg += `- ${DbOrder.orderNames[item.size]} ${orderType.name} Emotes (${price.cost.toFixed(2)}€) ${item.express ? `\n - ⏩ Express Delivery for x${item.express} Emotes (+${(pricePerItem * item.express).toFixed(2)}€)` : ``} \n`;
 		}
 		return msg;
 	}
@@ -276,11 +279,15 @@ module.exports = class MessageHelper {
      * Helper function to align each item evenly on the screen so that they have the same number of characters
      * @param {string} string - The item name which determines how much padding to use
 	 * @param {Integer} numSpaces - The number of spaces to use
-     */
-	static padString(string, numSpaces) {
+	 * @param {Boolean} cutoff - Whether to cut off after certain number of characters
+	 */
+	static padString(string, numSpaces, cutoff) {
 		let numChars = numSpaces ? numSpaces : 18;
 		numChars -= string.length;
 		let spaces = "";
+
+		if(string.length > numChars)
+			string = `${string.slice(0, numChars - 3)}...`;
 
 		// For each remaining character, add a space to reach the character limit
 		for(var i = 0; i < numChars; i++) 

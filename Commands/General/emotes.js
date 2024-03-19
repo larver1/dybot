@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputStyle, TextInputBuilder } = require('discord.js');
 const CustomEmbed = require('../../Helpers/CustomEmbed.js');
 const MessageHelper = require('../../Helpers/MessageHelper.js');
 const DbUser = require('../../Helpers/DbUser.js');
@@ -144,7 +144,7 @@ module.exports = {
         if (await DbOrder.getNumOrdersInProgress() >= 10)
             return interaction.editReply({ content: `Sorry, there are no order slots currently available. Be sure to to routinely use \`/commissions\` to check when an order slot is available.`});
 
-        user.pause();
+        await user.pause();
         const addId = uuidv4();
         const confirmId = uuidv4();
         const cancelId = uuidv4();
@@ -215,7 +215,9 @@ module.exports = {
             const orderType = DbOrder.getItemData(item.type);
             const orderPrice = DbOrder.getItemPrice(orderType, item.size);
             orderItemsMsg = `${MessageHelper.displayOrderItems(orderItems)}`;
+
             totalCost += orderPrice.cost;
+            if(item.express) totalCost += item.express * DbOrder.getPerEmotePrice(orderPrice);
 
             embeds[0].setDescription(`Please add items to your order. Once you are finished, hit "confirm".\n${orderItemsMsg}\n\n__**Total Base Cost: ${totalCost.toFixed(2)}€**__`);
             await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.log(e));
@@ -308,7 +310,8 @@ module.exports = {
                         return interactionReply.edit({ content: `You must select an order type and order amount before confirming. `}).catch(e => console.log(e));
                     } else {
                         const numExpress = await DbOrder.getNumExpressSlotsAvailable();
-                        const numExpressOrdered = orderItems.filter(item => item.express).length;
+                        let numExpressOrdered = 0; 
+                        orderItems.map(item => numExpressOrdered += item.express);
                         const numExpressLeft = numExpress - numExpressOrdered;
                         if(numExpress - numExpressOrdered > 0) {
                             await this.confirmExpressItem(i, currentOrderType, currentOrderAmount, orderCollector, numExpressLeft, collector);
@@ -351,15 +354,56 @@ module.exports = {
 
         const itemData = DbOrder.getItemData(orderType);
         const itemPrice = DbOrder.getItemPrice(itemData, orderSize);
+        const user = await DbUser.findUser(interaction.user.id);
+
+        const numEmotes = await DbOrder.getNumEmotesInItems([itemPrice]);
+        numExpress = Math.min(numExpress, numEmotes);
 
         const warnCollector = await MessageHelper.warnMessage(interaction, "express", { 
             numExpress: numExpress,
-            itemPrice: itemPrice.cost
-        });
+            itemPrice: itemPrice
+        }, null, true);
+
+        const amountId = uuidv4();
+        const modal = new ModalBuilder()
+        .setCustomId(amountId)
+        .setTitle(`How many emotes should have express delivery?`)
+        .addComponents(
+            new ActionRowBuilder()
+            .addComponents(
+                new TextInputBuilder()
+                    .setCustomId(amountId)
+                    .setLabel(`(min: 1, max: ${numExpress})`)
+                    .setStyle(TextInputStyle.Short)
+                    .setMinLength(1)
+                    .setMaxLength(numExpress)
+                    .setRequired(true)
+            )
+        );
 
         warnCollector.on('confirmed', async i => {
-            orderCollector.emit('addItem', { type: orderType, size: orderSize, express: true });
-            itemCollector.emit('finish');
+            await i.showModal(modal);
+            
+            const modalFilter = (modalInteraction) => modalInteraction.user.id == interaction.user.id && modalInteraction.customId === amountId;
+            interaction.awaitModalSubmit({ filter: modalFilter, time: 90_000 })
+            .then(async modalInteraction => {
+                await modalInteraction.deferUpdate();  
+
+                const amount = parseInt(modalInteraction.fields.getTextInputValue(amountId).replaceAll(",", ""));
+                if(isNaN(amount)) {
+                    user.unpause();
+                    return interaction.followUp({ content: "You must input a whole number." }).catch(e => console.log(e));
+                } else if(amount < 0 || amount > numExpress) {
+                    user.unpause();
+                    return interaction.followUp({ content: `You must input a number between 1-${numExpress}.` }).catch(e => console.log(e));
+                }
+
+                orderCollector.emit('addItem', { type: orderType, size: orderSize, express: amount });
+                itemCollector.emit('finish');
+            }).catch(async e => {
+                console.log(e);
+                return;
+            });
         });
 
         warnCollector.on('declined', async i => {
@@ -435,7 +479,8 @@ module.exports = {
         });
 
         warnCollector.on('confirmed', async i => {
-            const numExpressOrdered = orderItems.filter(item => item.express).length;
+            let numExpressOrdered = 0;
+            orderItems.map(item => numExpressOrdered += item.express);
             const numExpressAvailable = await DbOrder.getNumExpressSlotsAvailable();
 
             // Don't let user order something if capacity has changed since starting the order
@@ -444,7 +489,7 @@ module.exports = {
             }
             if(await DbOrder.getNumOrdersInProgress() >= 10) {
                 user.unpause();
-                return interaction.editReply({ content: `Sorry, it appears that the maximum number of orders has been reached since starting your oder. Please check \`/commissions\` routinely and wait for a spot to become vacant.` }).catch(e => console.log(e));
+                return interaction.editReply({ content: `Sorry, it appears that all order slots have filled up since starting your order. Please check \`/commissions\` routinely and wait for enough spots to open before trying to order again.` }).catch(e => console.log(e));
             }
 
             const order = await DbOrder.createOrder(user, orderItems, coupon ? coupon.coupon : null);

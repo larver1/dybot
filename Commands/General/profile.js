@@ -13,7 +13,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('profile')
 		.setDescription('View your DyBot profile.'),
-	help: `Displays your user data, such as your virtual balance and your coupons inventory`,
+	help: `Displays your user data, such as your virtual balance and your coupons inventory.`,
 	/**
 	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
