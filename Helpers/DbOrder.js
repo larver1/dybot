@@ -55,7 +55,7 @@ module.exports = class DbOrder {
                 order_id: order.order_id,
                 type: item.type,
                 size: item.size,
-                express: item.express ? item.express : false
+                express: item.express ? item.express : 0
             });
             order.items.push(orderItem);
         }
@@ -99,6 +99,70 @@ module.exports = class DbOrder {
     }
 
     /**
+     * Returns number of emotes that are either received or doing
+     */
+    static async getNumEmotesInProgress() {
+        const orders = await Orders.findAll({ where: {
+            status: {
+                [Op.in]: ['received', 'started'],
+            }  
+        }});
+
+        let numEmotes = 0;
+            
+        // Get all ongoing emotes
+        for(const order of orders) {
+            numEmotes += await this.getNumEmotesInOrder(order);
+        }
+
+        return numEmotes;
+    }
+
+    /**
+     * Returns number of emotes on an order
+     * @param {Orders} order - Order fetched from DB
+     */
+    static async getNumEmotesInOrder(order) {
+        let numEmotes = 0;
+        const orderItems = await order.getItems();
+        for(const item of orderItems) {
+            numEmotes += DbOrder.orderAmounts[item.size];
+        }
+
+        return numEmotes;
+    }
+
+    /**
+     * Returns number of emotes on an order
+     * @param {Array} items - All items in an order
+     */
+    static async getNumEmotesInItems(items) {
+        let numEmotes = 0;
+        for(const item of items) {
+            numEmotes += isNaN(item.size) ? DbOrder.orderAmounts[item.size] : item.size;
+        }
+        return numEmotes;
+    }
+
+    /**
+     * Returns number of emotes that are either received or doing
+     */
+    static async getEmotesInProgress() {
+        const orders = await Orders.findAll({ where: {
+            status: {
+                [Op.in]: ['received', 'started'],
+            }  
+        }});
+         
+        // Get all ongoing emotes
+        for(const order of orders) {
+            order.numEmotes = await this.getNumEmotesInOrder(order);
+        }
+
+        return orders;
+    }
+
+    /**
      * Returns ongoing express items
      */
     static async getExpressItems() {
@@ -127,10 +191,7 @@ module.exports = class DbOrder {
         // Get all ongoing order items
         for(const order of orders) {
             const items = await order.getItems();
-
-            // Count number of express items
-            const expressItems = items.filter(item => item.express);
-            numExpress += expressItems.length;
+            items.map(item => numExpress += item.express);
         }
 
         return Math.max(3 - numExpress, 0);
@@ -145,7 +206,10 @@ module.exports = class DbOrder {
         for(const item of items) {
             const itemData = DbOrder.getItemData(item.type);
             const itemPrice = DbOrder.getItemPrice(itemData, item.size);
-            cost += itemPrice.cost * (item.express ? 2 : 1);
+            cost += itemPrice.cost;
+            if(item.express) {
+                cost += DbOrder.getPerEmotePrice(itemPrice) * item.express;
+            }
         }
         return cost;
     }
@@ -171,11 +235,19 @@ module.exports = class DbOrder {
 
     /**
      * Get order price
-     * @param {Object} orderData - The order data to search through
+     * @param {Object} itemData - The order data to search through
      * @param {Any} size - The size of the order
      */
     static getItemPrice(itemData, size) {
 		return itemData.prices.find(prices => (prices.size == size) || (DbOrder.orderSizes[prices.size] == size));
+    }
+
+    /**
+     * Get cost of each emote in an item
+     * @param {Object} itemPrice - The item's price object
+     */
+    static getPerEmotePrice(itemPrice) {
+        return itemPrice.cost / itemPrice.size;
     }
 
     /**

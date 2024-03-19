@@ -53,7 +53,7 @@ module.exports = {
             if(i < 10 && topUsers[i].leaderboard) {
                 const clientUser = await interaction.client.users.fetch(topUsers[i].user_id);
                 const bal = `💰${topUsers[i].getDataValue('balance')}`;
-                msg += `${inlineCode(`${i + 1}. ${clientUser.tag}${MessageHelper.padString(clientUser.tag, 32)}: ${bal}${MessageHelper.extraPadding(bal, 8)} DyDots`)}\n`;
+                msg += `${inlineCode(`${i + 1}. ${clientUser.tag}${MessageHelper.padString(clientUser.tag, 18, true)}: ${bal}${MessageHelper.extraPadding(bal, 8)} DyDots`)}\n`;
             }
             if(topUsers[i].user_id == interaction.user.id) {
                 userPosition = i + 1;

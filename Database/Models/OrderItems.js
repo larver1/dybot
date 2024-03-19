@@ -23,9 +23,9 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
         },
 		express: {
-			type: DataTypes.BOOLEAN,
+			type: DataTypes.INTEGER,
 			allowNull: false,
-			defaultValue: false
+			defaultValue: 0
 		}
 	}, {
 		timestamps: true,

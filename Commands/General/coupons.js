@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const CustomEmbed = require('../../Helpers/CustomEmbed.js');
-const MessageHelper = require('../../Helpers/CustomEmbed.js');
+const MessageHelper = require('../../Helpers/MessageHelper.js');
 const DbUser = require('../../Helpers/DbUser.js');
 const fs = require('fs');
 const couponData = JSON.parse(fs.readFileSync('./Objects/Coupons.json'));
@@ -49,7 +49,7 @@ module.exports = {
         } else if(subCommand == 'buy') {
             const type = interaction.options.getString('type');
             const amount = interaction.options.getInteger('amount');
-            user.pause();
+            await user.pause();
             this.buyCoupon(interaction, user, type, amount);
         } else {
             throw new Error(`Coupons subcommand is invalid! Got ${subCommand}`);
