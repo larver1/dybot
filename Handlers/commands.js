@@ -6,7 +6,7 @@ module.exports = async(client) => {
     client.commands = new Collection();
     
     // Gets all the folders
-    const commandFolder = fs.readdirSync('./commands', { withFileTypes: true })
+    const commandFolder = fs.readdirSync('./Commands', { withFileTypes: true })
     .filter((item) => item.isDirectory())
     .map((item) => item.name);
 
@@ -14,10 +14,10 @@ module.exports = async(client) => {
     for (const folder of commandFolder) {
 
          // Find all events in each sub folder
-        const commandFiles = fs.readdirSync(`./commands/${folder}`).filter(file => file.endsWith('.js'));
+        const commandFiles = fs.readdirSync(`./Commands/${folder}`).filter(file => file.endsWith('.js'));
 
         for (const file of commandFiles) {
-            const command = require(`../commands/${folder}/${file}`);
+            const command = require(`../Commands/${folder}/${file}`);
             client.commands.set(command.data.name, command);
         }
     }

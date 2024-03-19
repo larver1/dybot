@@ -3,9 +3,9 @@ const { debug } = require('../config.json');
 
 module.exports = async(client) => {
     // Find all events
-    const eventFiles = fs.readdirSync('./events').filter(file => file.endsWith('.js'));
+    const eventFiles = fs.readdirSync('./Events').filter(file => file.endsWith('.js'));
     for (const file of eventFiles) {
-        const event = require(`../events/${file}`);
+        const event = require(`../Events/${file}`);
         if(!debug && event.debug)
             continue;
         

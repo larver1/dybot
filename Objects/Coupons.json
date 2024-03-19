@@ -1,7 +1,7 @@
 [
     {
         "name": "5% Off 20€ Order",
-        "cost": 1,
+        "cost": 10,
         "description": "Get a 5% discount off a 20€ Order.",
         "emoji": "🎟️",
         "discount": 5,
@@ -9,7 +9,7 @@
     },
     {
         "name": "10% Off 20€ Order",
-        "cost": 1,
+        "cost": 20,
         "description": "Get a 10% discount off a 20€ Order.",
         "emoji": "🎟️",
         "discount": 10,
@@ -17,7 +17,7 @@
     },
     {
         "name": "20% Off 20€ Order",
-        "cost": 1,
+        "cost": 40,
         "description": "Get a 20% discount off a 20€ Order.",
         "emoji": "🎟️",
         "discount": 5,
@@ -25,7 +25,7 @@
     },
     {
         "name": "5% Off 50€ Order",
-        "cost": 1,
+        "cost": 25,
         "description": "Get a 5% discount off a 50€ Order.",
         "emoji": "🎟️",
         "discount": 5,
@@ -33,7 +33,7 @@
     },
     {
         "name": "10% Off 50€ Order",
-        "cost": 1,
+        "cost": 50,
         "description": "Get a 10% discount off a 50 Order.",
         "emoji": "🎟️",
         "discount": 10,
@@ -41,7 +41,7 @@
     },
     {
         "name": "20% Off 50€ Order",
-        "cost": 1,
+        "cost": 100,
         "description": "Get a 20% discount off a 50 Order.",
         "emoji": "🎟️",
         "discount": 20,
@@ -49,7 +49,7 @@
     },
     {
         "name": "5% Off 90€ Order",
-        "cost": 1,
+        "cost": 45,
         "description": "Get a 5% discount off a 90€ Order.",
         "emoji": "🎟️",
         "discount": 5,
@@ -57,7 +57,7 @@
     },
     {
         "name": "10% Off 90€ Order",
-        "cost": 1,
+        "cost": 90,
         "description": "Get a 10% discount off a 90€ Order.",
         "emoji": "🎟️",
         "discount": 10,
@@ -65,7 +65,7 @@
     },
     {
         "name": "20% Off 90€ Order",
-        "cost": 1,
+        "cost": 180,
         "description": "Get a 20% discount off a 90€ Order.",
         "emoji": "🎟️",
         "discount": 20,
@@ -73,7 +73,7 @@
     },
     {
         "name": "5% Off 150€ Order",
-        "cost": 1,
+        "cost": 75,
         "description": "Get a 5% discount off a 150€ Order.",
         "emoji": "🎟️",
         "discount": 5,
@@ -81,7 +81,7 @@
     },
     {
         "name": "10% Off 150€ Order",
-        "cost": 1,
+        "cost": 150,
         "description": "Get a 10% discount off a 150€ Order.",
         "emoji": "🎟️",
         "discount": 10,
@@ -89,7 +89,7 @@
     },
     {
         "name": "20% Off 150€ Order",
-        "cost": 1,
+        "cost": 300,
         "description": "Get a 20% discount off a 150€ Order.",
         "emoji": "🎟️",
         "discount": 20,
