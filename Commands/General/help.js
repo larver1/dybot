@@ -63,6 +63,8 @@ module.exports = {
 	 */
 	async displayCommandInfo(interaction, commandName) {
         const command = interaction.client.commands.get(commandName.toLowerCase());
+		
+
 		return interaction.editReply({ content: `## \`/${command.data.name}\`\n${command.help}` }).catch(e => console.log(e));
 	}
 }

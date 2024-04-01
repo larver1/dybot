@@ -49,7 +49,7 @@ module.exports = {
         } else if(subCommand == 'buy') {
             const type = interaction.options.getString('type');
             const amount = interaction.options.getInteger('amount');
-            user.pause();
+            await user.pause();
             this.buyCoupon(interaction, user, type, amount);
         } else {
             throw new Error(`Coupons subcommand is invalid! Got ${subCommand}`);
