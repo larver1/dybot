@@ -494,9 +494,9 @@ module.exports = {
 
             const order = await DbOrder.createOrder(user, orderItems, coupon ? coupon.coupon : null);
             order.items = await order.getItems();
-            await MessageHelper.sendOrderDM(interaction, order);
+            const receiptEmbed = await MessageHelper.sendOrderDM(interaction, order);
             user.unpause();
-            await interaction.editReply({ content: `Your order has been created successfully, you will receive a DM with the receipt. Dyron has also been notified of the order and will be in touch shortly.`, embeds: [], components: [] }).catch(e => console.log(e));
+            await interaction.editReply({ content: `Your order has been created successfully, you will receive a DM with the receipt. Dyron has also been notified of the order and will be in touch shortly.`, embeds: [receiptEmbed], components: [] }).catch(e => console.log(e));
         });
 
         warnCollector.on('declined', async i => {

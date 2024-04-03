@@ -207,6 +207,7 @@ module.exports = class MessageHelper {
 			console.warn(`Failed to send reminder to ${client.tag}`);
 			console.warn(error);
 		}
+		return receiptEmbed;
 	}
 
 	/**
