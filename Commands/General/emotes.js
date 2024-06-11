@@ -33,7 +33,7 @@ module.exports = {
                 view.setName('view')
                 .setDescription('View your orders.'))
         ),
-    help: `Allows you to see the different types of emotes you can order, manage your current orders and create new ones.\n- \`/emotes options\`: See all the types of emote you can order and their respective prices.\n- \`/emotes order create\`: Allows you to create an order and add items to it, and apply coupons if you have any that apply.\n- \`/emotes order view\`: Allows you to check the status of your orders and cancel them if not started.`,
+    help: `Allows you to see the different types of emotes you can order, manage your current orders and create new ones.\n- \`/emotes options\`: See all the types of emote you can order and their respective prices.\n- \`/emotes order create\`: Allows you to create an order and add items to it, and apply coupons if you have any that apply. You can add an Express-Delivery to your emote to make sure it is delivered within 5 business-days. This will cost double the price of the original order. One Express-Slot can only hold one emote, so a maximum of 3 emotes can be in express-delivery at the same time.\n- \`/emotes order view\`: Allows you to check the status of your orders and cancel them if not started.`,
 	/**
 	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
