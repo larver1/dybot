@@ -31,8 +31,8 @@ module.exports = class DbOrder {
     };
 
     static orderStatusEmotes = {
-        received: '<:todo:1211344249153519676>',
-        started: '<:progress:1211344250311278683>'
+        received: '<:todo:1250076911384924312>',
+        started: '<:progress:1250076910336081940>'
     };
 
     /**
