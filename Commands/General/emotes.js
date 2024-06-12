@@ -305,23 +305,21 @@ module.exports = {
             } 
             else if(i.customId == confirmId) {
                 // If confirming, add item to list
-                if(i.customId == confirmId) {
-                    if(!currentOrderType || !currentOrderAmount) {
-                        return interactionReply.edit({ content: `You must select an order type and order amount before confirming. `}).catch(e => console.log(e));
+                if(!currentOrderType || !currentOrderAmount) {
+                    return interactionReply.edit({ content: `You must select an order type and order amount before confirming. `}).catch(e => console.log(e));
+                } else {
+                    const numExpress = await DbOrder.getNumExpressSlotsAvailable();
+                    let numExpressOrdered = 0; 
+                    orderItems.map(item => numExpressOrdered += item.express);
+                    const numExpressLeft = numExpress - numExpressOrdered;
+                    if(numExpress - numExpressOrdered > 0) {
+                        await this.confirmExpressItem(i, currentOrderType, currentOrderAmount, orderCollector, numExpressLeft, collector);
+                        return;
                     } else {
-                        const numExpress = await DbOrder.getNumExpressSlotsAvailable();
-                        let numExpressOrdered = 0; 
-                        orderItems.map(item => numExpressOrdered += item.express);
-                        const numExpressLeft = numExpress - numExpressOrdered;
-                        if(numExpress - numExpressOrdered > 0) {
-                            await this.confirmExpressItem(i, currentOrderType, currentOrderAmount, orderCollector, numExpressLeft, collector);
-                            return;
-                        } else {
-                            orderCollector.emit('addItem', { type: currentOrderType, size: currentOrderAmount, express: false });
-                            collector.emit('finish');
-                        }
+                        orderCollector.emit('addItem', { type: currentOrderType, size: currentOrderAmount, express: false });
+                        collector.emit('finish');
                     }
-                }      
+                }     
             }
             else if(i.customId == cancelId) {
                 collector.emit('finish');
@@ -356,15 +354,11 @@ module.exports = {
         const itemPrice = DbOrder.getItemPrice(itemData, orderSize);
         const user = await DbUser.findUser(interaction.user.id);
         const maxExpress = Math.min(numExpress, DbOrder.orderAmounts[orderSize]);
-
-        const warnCollector = await MessageHelper.warnMessage(interaction, "express", { 
-            numExpress: numExpress,
-            itemPrice: itemPrice
-        }, null, true);
-
+        const modalId = uuidv4();
         const amountId = uuidv4();
+
         const modal = new ModalBuilder()
-        .setCustomId(amountId)
+        .setCustomId(modalId)
         .setTitle(`How many emotes should have express delivery?`)
         .addComponents(
             new ActionRowBuilder()
@@ -379,10 +373,15 @@ module.exports = {
             )
         );
 
+        const warnCollector = await MessageHelper.warnMessage(interaction, "express", { 
+            numExpress: numExpress,
+            itemPrice: itemPrice
+        }, null, true);
+
         warnCollector.on('confirmed', async i => {
             await i.showModal(modal);
             
-            const modalFilter = (modalInteraction) => modalInteraction.user.id == interaction.user.id && modalInteraction.customId === amountId;
+            const modalFilter = (modalInteraction) => modalInteraction.user.id == interaction.user.id && modalInteraction.customId === modalId;
             interaction.awaitModalSubmit({ filter: modalFilter, time: 90_000 })
             .then(async modalInteraction => {
                 await modalInteraction.deferUpdate();  
@@ -410,6 +409,7 @@ module.exports = {
 
         warnCollector.on('end', async collected => {
 			if(collected.size <= 0) {
+                user.unpause();
 				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
 			}
         });
