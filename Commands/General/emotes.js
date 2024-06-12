@@ -355,9 +355,7 @@ module.exports = {
         const itemData = DbOrder.getItemData(orderType);
         const itemPrice = DbOrder.getItemPrice(itemData, orderSize);
         const user = await DbUser.findUser(interaction.user.id);
-
-        const numEmotes = await DbOrder.getNumEmotesInItems([itemPrice]);
-        numExpress = Math.min(numExpress, numEmotes);
+        const maxExpress = Math.min(numExpress, DbOrder.orderAmounts[orderSize]);
 
         const warnCollector = await MessageHelper.warnMessage(interaction, "express", { 
             numExpress: numExpress,
@@ -373,10 +371,10 @@ module.exports = {
             .addComponents(
                 new TextInputBuilder()
                     .setCustomId(amountId)
-                    .setLabel(`(min: 1, max: ${numExpress})`)
+                    .setLabel(`(min: 1, max: ${maxExpress})`)
                     .setStyle(TextInputStyle.Short)
                     .setMinLength(1)
-                    .setMaxLength(numExpress)
+                    .setMaxLength(1)
                     .setRequired(true)
             )
         );
@@ -388,14 +386,13 @@ module.exports = {
             interaction.awaitModalSubmit({ filter: modalFilter, time: 90_000 })
             .then(async modalInteraction => {
                 await modalInteraction.deferUpdate();  
-
                 const amount = parseInt(modalInteraction.fields.getTextInputValue(amountId).replaceAll(",", ""));
                 if(isNaN(amount)) {
                     user.unpause();
                     return interaction.followUp({ content: "You must input a whole number." }).catch(e => console.log(e));
-                } else if(amount < 0 || amount > numExpress) {
+                } else if(amount < 0 || amount > maxExpress) {
                     user.unpause();
-                    return interaction.followUp({ content: `You must input a number between 1-${numExpress}.` }).catch(e => console.log(e));
+                    return interaction.followUp({ content: `You must input a number between 1-${maxExpress}.` }).catch(e => console.log(e));
                 }
 
                 orderCollector.emit('addItem', { type: orderType, size: orderSize, express: amount });
