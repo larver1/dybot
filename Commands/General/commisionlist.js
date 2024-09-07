@@ -11,7 +11,7 @@ const { inlineCode, codeBlock } = require('discord.js');
  */
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName('commissions')
+		.setName('commissionlist')
 		.setDescription('See how many order slots are open.'),
     help: `Shows a list of all art commissions currently in progress. You can order using \`/emotes order create\` only when there is a free spot on the list. Express-Slots guarantee a delivery in 5 business-days.`,
 	/**
@@ -59,7 +59,7 @@ module.exports = {
         }
 
         const commissionsEmbed = new CustomEmbed(interaction)
-        .setTitle('Commissions List')
+        .setTitle('Commission List')
         .setDescription(`${msg}\n\n__Use \`/emotes order create\` to place an order__`)
 
         return interaction.editReply({ embeds: [commissionsEmbed] }).catch(e => console.log(e));
