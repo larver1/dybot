@@ -181,7 +181,7 @@ module.exports = class MessageHelper {
 		else if(order.status == 'complete') orderEmbed.setTitle(`This order has been completed! ✅`)
 		else if(order.status == 'started') orderEmbed.setTitle(`This order is now in progress! 🔃`)
 
-		let notifyMsg = status == 'received' ? `\n\nDyron will be in touch shortly to discuss the commission and agree on a contract. If you wish to cancel this order, use \`/commission order view\`.` : ``;
+		let notifyMsg = status == 'received' ? `\n\nDyron will be in touch shortly to discuss the commission and agree on a contract. If you wish to cancel this order, use \`/commission view\`.` : ``;
 
 		// Send receipt to client
 		const receiptEmbed = new CustomEmbed(interaction, client)

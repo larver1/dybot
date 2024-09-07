@@ -13,7 +13,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('commissionlist')
 		.setDescription('See how many order slots are open.'),
-    help: `Shows a list of all art commissions currently in progress. You can order using \`/commission order create\` only when there is a free spot on the list. Express-Slots guarantee a delivery in 5 business-days.`,
+    help: `Shows a list of all art commissions currently in progress. You can order using \`/commission create\` only when there is a free spot on the list. Express-Slots guarantee a delivery in 5 business-days.`,
 	/**
 	 * Execute command
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
@@ -60,7 +60,7 @@ module.exports = {
 
         const commissionsEmbed = new CustomEmbed(interaction)
         .setTitle('Commission List')
-        .setDescription(`${msg}\n\n__Use \`/emotes order create\` to place an order__`)
+        .setDescription(`${msg}\n\n__Use \`/commission create\` to place an order__`)
 
         return interaction.editReply({ embeds: [commissionsEmbed] }).catch(e => console.log(e));
     },
