@@ -17,41 +17,33 @@ const crossEmoji = "<a:cross:886245292339515412>";
  */
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName('emotes')
+		.setName('commission')
 		.setDescription('View and redeem coupons.')
         .addSubcommand(view =>
 			view.setName('options')
 			.setDescription('See the types of emotes you can buy.'))
-        .addSubcommandGroup(order =>
-            order
-                .setName('order')
-                .setDescription('Access your orders or create new ones.')
-            .addSubcommand(create =>
-                create.setName('create')
-                .setDescription('Create a new order.'))
-            .addSubcommand(view =>
-                view.setName('view')
-                .setDescription('View your orders.'))
-        ),
-    help: `Allows you to see the different types of emotes you can order, manage your current orders and create new ones.\n- \`/emotes options\`: See all the types of emote you can order and their respective prices.\n- \`/emotes order create\`: Allows you to create an order and add items to it, and apply coupons if you have any that apply. You can add an Express-Delivery to your emote to make sure it is delivered within 5 business-days. This will cost double the price of the original order. One Express-Slot can only hold one emote, so a maximum of 3 emotes can be in express-delivery at the same time.\n- \`/emotes order view\`: Allows you to check the status of your orders and cancel them if not started.`,
+        .addSubcommand(create =>
+            create.setName('create')
+            .setDescription('Create a new order.'))
+        .addSubcommand(view =>
+            view.setName('view')
+            .setDescription('View your orders.')),
+    help: `Allows you to see the different types of emotes you can order, manage your current orders and create new ones.\n- \`/commission options\`: See all the types of emote you can order and their respective prices.\n- \`/commission create\`: Allows you to create an order and add items to it, and apply coupons if you have any that apply. You can add an Express-Delivery to your emote to make sure it is delivered within 5 business-days. This will cost double the price of the original order. One Express-Slot can only hold one emote, so a maximum of 3 emotes can be in express-delivery at the same time.\n- \`/commission view\`: Allows you to check the status of your orders and cancel them if not started.`,
 	/**
 	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
 	 */
 	async execute(interaction) {
         const subCommand = interaction.options.getSubcommand();
-		const subCommandGroup = interaction.options._group ? interaction.options.getSubcommandGroup() : null;
 
         if(subCommand == 'options') {
             this.viewOrderTypes(interaction);
-        } else if(subCommandGroup == 'order') {
-            if(subCommand == 'create') {
+        } else if(subCommand == 'create') {
                 const type = interaction.options.getString('type');
                 const amount = interaction.options.getString('amount');
                 this.order(interaction, type, amount);
-            } else if(subCommand == 'view') {
-                this.viewOrders(interaction);
-            }
+        } else if(subCommand == 'view') {
+            this.viewOrders(interaction);
         } else {
             throw new Error(`Coupons subcommand is invalid! Got ${subCommand}`);
         }

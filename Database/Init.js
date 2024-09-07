@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize');
-const { dbName, dbUser, dbPass } = require('../config.json');
+const { dbName, dbUser, dbPass, debug } = require('../config.json');
 const conn = {};
 
 const fs = require('fs');
@@ -11,7 +11,7 @@ const sequelize = new Sequelize(dbName, dbUser, dbPass, {
 	logging: false,
 	dialectOptions: {
 		connectTimeout: 20000,
-		socketPath: "/var/run/mysqld/mysqld.sock"
+		socketPath: debug ? null : "/var/run/mysqld/mysqld.sock"
 	},
 	retry: {
 		match: [
