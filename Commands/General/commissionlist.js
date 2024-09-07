@@ -13,7 +13,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('commissionlist')
 		.setDescription('See how many order slots are open.'),
-    help: `Shows a list of all art commissions currently in progress. You can order using \`/emotes order create\` only when there is a free spot on the list. Express-Slots guarantee a delivery in 5 business-days.`,
+    help: `Shows a list of all art commissions currently in progress. You can order using \`/commission order create\` only when there is a free spot on the list. Express-Slots guarantee a delivery in 5 business-days.`,
 	/**
 	 * Execute command
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
