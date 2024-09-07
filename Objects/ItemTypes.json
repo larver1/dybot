@@ -1,27 +1,5 @@
 [
     {
-        "name": "Sketch",
-        "value": "sketch",
-        "prices": [
-            { "size": 1, "cost": 3.50 }, 
-            { "size": 3, "cost": 10.00 },
-            { "size": 6, "cost": 19.00 },
-            { "size": 10, "cost": 30.00 }
-        ],
-        "image": "https://cdn.discordapp.com/attachments/1155774786451017829/1210236161935540294/Titelloses_396_20240123092637.png?ex=65e9d342&is=65d75e42&hm=7ce46a617ed112c5b23887dfab616133ac18560f1a28206b20b34bc96eb4f856&"
-    },
-    {
-        "name": "Lineart",
-        "value": "lineart",
-        "prices": [
-            { "size": 1, "cost": 4.50 }, 
-            { "size": 3, "cost": 13.00 }, 
-            { "size": 6, "cost": 25.00 },
-            { "size": 10, "cost": 40.00}
-        ],
-        "image": "https://cdn.discordapp.com/attachments/1155774786451017829/1210236030016294932/vaniCry2_20240130164359.png?ex=65e9d322&is=65d75e22&hm=12c14b09d33ea20fb03f4527fa290606627d0abe9d700fa9bf79fa83d766d9fa&"
-    },
-    {
         "name": "Color with Black Lineart",
         "value": "colorblack",
         "prices": [
