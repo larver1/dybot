@@ -247,7 +247,7 @@ module.exports = class MessageHelper {
 		let msg = ``;
 		for(const item of items) {
 			const orderType = DbOrder.getItemData(item.type);
-			msg += `x${DbOrder.orderAmounts[item.size]} ${orderType.name}, `;
+			msg += `x${DbOrder.orderAmounts[item.size]} ${orderType && orderType.name ? orderType.name : null}, `;
 		}
 		msg = msg.slice(0, msg.length - 2);
 		if(msg.length > 50) msg = `${msg.slice(0, 50)}...`;
