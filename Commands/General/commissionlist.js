@@ -1,7 +1,9 @@
 const { SlashCommandBuilder } = require('discord.js');
 const CustomEmbed = require('../../Helpers/CustomEmbed.js');
 const DbOrder = require('../../Helpers/DbOrder.js');
-const { inlineCode, codeBlock } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
+const filePath = path.join(process.cwd(), 'toggles.json');
 
 /**
  * @param {SlashCommandBuilder} data - Command data.
@@ -28,9 +30,15 @@ module.exports = {
     async viewCommissions(interaction) {
         const currentOrders = await DbOrder.getOrdersInProgress();
         const expressItems = await DbOrder.getExpressItems();
+        const toggleData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+
         let msg = ``;
         let slotNo = 0;
         let expressNo = 0;
+
+        if(!toggleData.orders) {
+            msg += `__⚠️New orders are currently unavailable⚠️__\n\n`;
+        }
 
         // Show delivery slots
         for(const order of currentOrders) {
@@ -44,7 +52,11 @@ module.exports = {
         }
 
         // Show express slots
-        msg += `### Express Delivery\n`;
+        msg += `### Express Delivery\n`; 
+        if(!toggleData.express) {
+            msg += `__⚠️Express slots are currently unavailable⚠️__\n\n`;
+        }
+
         for(const item of expressItems) {
             const order = await DbOrder.getItemOrder(item);
             const clientUser = await interaction.client.users.fetch(order.user_id);
@@ -56,7 +68,7 @@ module.exports = {
         while(expressNo < 3) {
             msg += `${expressNo + 1}. Free Spot\n`;
             expressNo++;
-        }
+        }        
 
         const commissionsEmbed = new CustomEmbed(interaction)
         .setTitle('Commission List')

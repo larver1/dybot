@@ -8,6 +8,8 @@ const itemTypes = JSON.parse(fs.readFileSync('./Objects/ItemTypes.json'));
 const { Users, Coupons } = require('../../Database/Objects');
 const { v4: uuidv4 } = require('uuid');
 const crossEmoji = "<a:cross:886245292339515412>";
+const path = require('path');
+const filePath = path.join(process.cwd(), 'toggles.json');
 
 /**
  * @param {SlashCommandBuilder} data - Command data.
@@ -136,8 +138,14 @@ module.exports = {
         if (await DbOrder.getNumOrdersInProgress() >= 10)
             return interaction.editReply({ content: `Sorry, there are no order slots currently available. Be sure to to routinely use \`/commissions\` to check when an order slot is available.`});
 
+        const toggleData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        if(!toggleData.orders) {
+            return interaction.editReply({ content: 'Placing orders is currently unavailable. Please try again another time. '}).catch(e => console.log(e));
+        }
+        
         await user.pause();
         const addId = uuidv4();
+        const specialId = uuidv4();
         const confirmId = uuidv4();
         const cancelId = uuidv4();
         let orderItemsMsg = ``;
@@ -152,6 +160,11 @@ module.exports = {
             new ButtonBuilder()
                 .setCustomId(addId)
                 .setLabel('Add Item')
+                .setEmoji('➕')
+                .setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder()
+                .setCustomId(specialId)
+                .setLabel('Add Special Item')
                 .setEmoji('➕')
                 .setStyle(ButtonStyle.Secondary))
 
@@ -173,7 +186,7 @@ module.exports = {
         const orderItems = [];
 
         const interactionReply = await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.log(e));
-        const filter = i => i.user.id === interaction.user.id && (i.customId == addId || i.customId == confirmId || i.customId == cancelId);
+        const filter = i => i.user.id === interaction.user.id && (i.customId == addId || i.customId == confirmId || i.customId == cancelId || i.customId == specialId);
         const collector = interactionReply.createMessageComponentCollector({ filter, time: 300_000, errors: ['time'] });
         collector.on('collect', async i => { 
             await i.deferUpdate().catch(e => {console.log(e)});
@@ -192,16 +205,19 @@ module.exports = {
                     if(availableCoupons.length) return this.selectCoupon(interaction, user, orderItems, availableCoupons);
                     else return this.confirmOrder(interaction, user, orderItems);
                 }
-            } else if(i.customId == addId) {
+            } else if(i.customId == addId || i.customId == specialId) {
                 // Disable buttons
                 MessageHelper.activateButtons(components, false);
-                await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.log(e));            }
-
+                await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.log(e));            
+            
                 // Follow up message
-                await this.addItem(interaction, components, collector, orderItems);
+                if(i.customId == addId) await this.addItem(interaction, components, collector, orderItems);
+                else await this.addSpecialItem(interaction, components, collector, orderItems);
+            }
 
         });
 
+        let specialMsg = ``;
         collector.on('addItem', async item => {
             orderItems.push(item);
             const orderType = DbOrder.getItemData(item.type);
@@ -210,14 +226,106 @@ module.exports = {
 
             totalCost += orderPrice.cost;
             if(item.express) totalCost += item.express * DbOrder.getPerEmotePrice(orderPrice);
+            if(item.special && !specialMsg.length) specialMsg = ` + Special Item Cost`;
 
-            embeds[0].setDescription(`Please add items to your order. Once you are finished, hit "confirm".\n${orderItemsMsg}\n\n__**Total Base Cost: ${totalCost.toFixed(2)}€**__`);
+            embeds[0].setDescription(`Please add items to your order. Once you are finished, hit "confirm".\n${orderItemsMsg}\n\n__**Total Base Cost: ${totalCost.toFixed(2)}€${specialMsg}**__`);
             await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.log(e));
         });
 
         collector.on('end', async collected => {
 			if(collected.size <= 0) {
                 if(user) user.unpause();
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+			}
+        });
+    },
+    /**
+     * Add a special item to an order
+     * @param {CommandInteraction} interaction - User's interaction with the bot
+     * @param {Array} orderMessageComponents - Message components
+     * @param {Collector} orderCollector - The message collector of the order message
+     * @param {Array} orderItems - The object containing the order items
+     */
+    async addSpecialItem(interaction, orderMessageComponents, orderCollector, orderItems) {
+        const selectOrderTypes = MessageHelper.getGenericSelectMenu([ 
+            { name: 'Twitch Overlay', value: 'twitch' }, 
+            { name: 'Profile Picture', value: 'pfp' }, 
+            { name: 'Bigger Artwork', value: 'big' }, 
+        ])[0];
+        const orderTypeId = uuidv4();
+        const confirmId = uuidv4();
+        const cancelId = uuidv4();
+
+        // Build necessary components
+        const orderTypeSelectMenu = new ActionRowBuilder()
+        .addComponents(
+            new StringSelectMenuBuilder()
+                .setCustomId(orderTypeId)
+                .setPlaceholder('Select an Order Type')
+                .addOptions(selectOrderTypes) 
+                .setMinValues(1)
+                .setMaxValues(1),  
+        );
+        const orderOptions = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId(confirmId)
+                .setLabel('Confirm')
+                .setEmoji('<a:tick:886245262169866260>')
+                .setStyle(ButtonStyle.Primary),
+            new ButtonBuilder()
+                .setCustomId(cancelId)
+                .setLabel('Cancel')
+                .setEmoji('<a:cross:886245292339515412>')
+                .setStyle(ButtonStyle.Danger)
+        )
+
+        const components = [orderTypeSelectMenu, orderOptions];
+        const interactionReply = await interaction.followUp({ content: `Please select an order type. The price of this will be agreed upon contract creation.`, components: components }).catch(e => console.log(e));
+        
+        const filter = i => i.user.id === interaction.user.id && (i.customId == orderTypeId || i.customId == confirmId || i.customId == cancelId);
+        const collector = interactionReply.createMessageComponentCollector({ filter, time: 300_000, errors: ['time'] });
+        
+        let currentOrderType;
+        collector.on('collect', async i => { 
+            await i.deferUpdate().catch(e => {console.log(e)});
+
+            if(i.customId == orderTypeId) {
+                currentOrderType = i.values[0];
+            } 
+            else if(i.customId == confirmId) {
+                // If confirming, add item to list
+                if(!currentOrderType) {
+                    return interactionReply.edit({ content: `You must select an order type and order amount before confirming. `}).catch(e => console.log(e));
+                } else {
+                    const numExpress = await DbOrder.getNumExpressSlotsAvailable();
+                    let numExpressOrdered = 0; 
+                    orderItems.map(item => numExpressOrdered += item.express);
+                    const numExpressLeft = numExpress - numExpressOrdered;
+                    const toggleData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                    if(toggleData.express && numExpress - numExpressOrdered > 0) {
+                        await this.confirmExpressItem(i, currentOrderType, 1, orderCollector, numExpressLeft, collector);
+                        return;
+                    } else {
+                        orderCollector.emit('addItem', { type: currentOrderType, size: 1, express: false, special: true });
+                        collector.emit('finish');
+                    }
+                }     
+            }
+            else if(i.customId == cancelId) {
+                collector.emit('finish');
+            }
+        });
+
+        collector.on('finish', async () => {
+            // Delete message and reactivate order buttons
+            MessageHelper.activateButtons(orderMessageComponents, true);
+            await interactionReply.delete().catch(e => console.log(e));
+            await interaction.editReply({ components: orderMessageComponents }).catch(e => console.log(e));
+        });
+
+        collector.on('end', async collected => {
+			if(collected.size <= 0) {
 				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
 			}
         });
@@ -304,7 +412,8 @@ module.exports = {
                     let numExpressOrdered = 0; 
                     orderItems.map(item => numExpressOrdered += item.express);
                     const numExpressLeft = numExpress - numExpressOrdered;
-                    if(numExpress - numExpressOrdered > 0) {
+                    const toggleData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                    if(toggleData.express && numExpress - numExpressOrdered > 0) {
                         await this.confirmExpressItem(i, currentOrderType, currentOrderAmount, orderCollector, numExpressLeft, collector);
                         return;
                     } else {
