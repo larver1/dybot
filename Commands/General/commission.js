@@ -616,7 +616,7 @@ module.exports = {
     async viewOrders(interaction) {
         const isAdmin = interaction.client.config.adminId == interaction.user.id;
         const orders = isAdmin ? await DbOrder.getOrdersInProgress(true) : await DbOrder.getUserOrders(interaction.user.id, true);
-        const selectOrders = MessageHelper.getGenericSelectMenu(orders.map(order =>  ({ name: `Order #${order.order_id}: ${order.status}`, description: `${MessageHelper.displayOrderItemsSummary(order.items)}` })));
+        const selectOrders = MessageHelper.getGenericSelectMenu(orders.map(order =>  ({ name: `Order #${order.order_id}: ${order.status}`, description: `${order.items ? MessageHelper.displayOrderItemsSummary(order.items) : ' '}` })));
         const selectId = uuidv4();
         const prevPageId = uuidv4();
         const nextPageId = uuidv4();
