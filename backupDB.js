@@ -2,7 +2,7 @@ const fs = require('fs');
 const dbConfig = JSON.parse(fs.readFileSync('./config/config.json'));
 const { execSync } = require('child_process');
 
-const dumpFileName = `./backups/backup.sql.gz`;
+const dumpFileName = `./backups/backup.sql`;
 
 try {
   execSync(`mysqldump -u ${dbConfig.development.username} -p${dbConfig.development.password} ${dbConfig.development.database} --single-transaction --routines --triggers > ${dumpFileName}`);
