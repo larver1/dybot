@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
 			primaryKey: true,
 		},
         type: {
-            type: DataTypes.ENUM('sketch', 'lineart', 'colorblack', 'colorcolor', 'animated'),
+            type: DataTypes.ENUM('sketch', 'lineart', 'colorblack', 'colorcolor', 'animated', 'twitch', 'pfp', 'big'),
             allowNull: false,
         },
 		size: {

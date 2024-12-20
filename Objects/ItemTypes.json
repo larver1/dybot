@@ -31,5 +31,38 @@
             { "size": 10, "cost": 210.00 }
         ],
         "image": "https://cdn.discordapp.com/attachments/1155774786451017829/1210236327111565362/Nom2.gif?ex=65e9d369&is=65d75e69&hm=802d5b4945fdc2689ca3517323b43bca9587a6189d3b196c5d9bb160f11fb69c&"
+    },
+    {
+        "name": "Twitch Overlay",
+        "value": "twitch",
+        "prices": [
+            { "size": 1, "cost": 0 }, 
+            { "size": 3, "cost": 0 }, 
+            { "size": 6, "cost": 0 }, 
+            { "size": 10, "cost": 0 }
+        ],
+        "special": true
+    },
+    {
+        "name": "Profile Picture",
+        "value": "pfp",
+        "prices": [
+            { "size": 1, "cost": 0 }, 
+            { "size": 3, "cost": 0 }, 
+            { "size": 6, "cost": 0 }, 
+            { "size": 10, "cost": 0 }
+        ],
+        "special": true
+    },
+    {
+        "name": "Bigger Artwork",
+        "value": "big",
+        "prices": [
+            { "size": 1, "cost": 0 }, 
+            { "size": 3, "cost": 0 }, 
+            { "size": 6, "cost": 0 }, 
+            { "size": 10, "cost": 0 }
+        ],
+        "special": true
     }
 ]

@@ -33,13 +33,15 @@ module.exports = class MessageHelper {
 				let orderCost = DbOrder.getTotalOrderCost(data.items);
 				let discountCost = orderCost;
 				let discountMsg = "";
+				let specialMsg = ``;
+				for(const item of data.items) if(item.special) specialMsg = ' + Special Item Cost';
 				if(data.coupon) {
 					discountCost = DbOrder.getOrderDiscount(orderCost, data.coupon);
 					discountMsg = `~~${orderCost.toFixed(2)}€~~ `;
 				} 
 				warning = new CustomEmbed(interaction)
 					.setTitle(`Are you sure you want to order the following Emotes?`)
-					.setDescription(`${MessageHelper.displayOrderItems(data.items)}\nThe total cost of this order will be\n## ${discountMsg ? discountMsg : ""}${discountCost.toFixed(2)}€\n${data.coupon ? `__You applied a ${data.coupon.emoji} ${data.coupon.name} coupon.__` : ``}`)
+					.setDescription(`${MessageHelper.displayOrderItems(data.items)}\nThe total cost of this order will be\n## ${discountMsg ? discountMsg : ""}${discountCost.toFixed(2)}€${specialMsg}\n${data.coupon ? `__You applied a ${data.coupon.emoji} ${data.coupon.name} coupon.__` : ``}`)
 				break;
 			case "leaderboard":
 				warning = new CustomEmbed(interaction)
@@ -232,10 +234,13 @@ module.exports = class MessageHelper {
 		let msg = ``;
 		for(const item of items) {
 			const orderType = DbOrder.getItemData(item.type);
-			const price = DbOrder.getItemPrice(orderType, item.size);
-			const pricePerItem = DbOrder.getPerEmotePrice(price);
-			msg += `- ${DbOrder.orderNames[item.size]} ${orderType.name} Emotes (${price.cost.toFixed(2)}€) ${item.express ? `\n - ⏩ Express Delivery for x${item.express} Emotes (+${(pricePerItem * item.express).toFixed(2)}€)` : ``} \n`;
-		}
+			if(orderType.special) msg +=  `- ${orderType.name}${item.express ? `\n - ⏩ Express Delivery` : ``}\n`;
+			else {
+				const price = DbOrder.getItemPrice(orderType, item.size);
+				const pricePerItem = DbOrder.getPerEmotePrice(price);
+				msg += `- ${DbOrder.orderNames[item.size]} ${orderType.name} Emotes (${price.cost.toFixed(2)}€) ${item.express ? `\n - ⏩ Express Delivery for x${item.express} Emotes (+${(pricePerItem * item.express).toFixed(2)}€)` : ``} \n`;
+			}
+}
 		return msg;
 	}
 
