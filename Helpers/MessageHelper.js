@@ -145,7 +145,7 @@ module.exports = class MessageHelper {
 			// Add item to SelectMenu
 			selectionList[page].push({
 				label: components[i].name,
-				description: components[i].description,
+				description: components[i].description ? components[i].description : ' ',
 				value: components[i].value ? `${components[i].value}` : `${i}`
 			});
         }
