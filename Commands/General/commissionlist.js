@@ -37,38 +37,38 @@ module.exports = {
         let expressNo = 0;
 
         if(!toggleData.orders) {
-            msg += `__⚠️New orders are currently unavailable⚠️__\n\n`;
-        }
-
-        // Show delivery slots
-        for(const order of currentOrders) {
-            const clientUser = await interaction.client.users.fetch(order.user_id);
-            slotNo++;
-            msg += `${slotNo}. ${DbOrder.orderStatusEmotes[order.status]} \`${clientUser.tag}\`\n`;
-        }
-        while(slotNo < 10) {
-            msg += `${slotNo + 1}. Free Spot\n`;
-            slotNo++;
+            msg += `__⚠️New orders are currently unavailable⚠️__\n`;
+        } else {
+            // Show delivery slots
+            for(const order of currentOrders) {
+                const clientUser = await interaction.client.users.fetch(order.user_id);
+                slotNo++;
+                msg += `${slotNo}. ${DbOrder.orderStatusEmotes[order.status]} \`${clientUser.tag}\`\n`;
+            }
+            while(slotNo < 10) {
+                msg += `${slotNo + 1}. Free Spot\n`;
+                slotNo++;
+            }
         }
 
         // Show express slots
         msg += `### Express Delivery\n`; 
         if(!toggleData.express) {
-            msg += `__⚠️Express slots are currently unavailable⚠️__\n\n`;
-        }
-
-        for(const item of expressItems) {
-            const order = await DbOrder.getItemOrder(item);
-            const clientUser = await interaction.client.users.fetch(order.user_id);
-            for(let i = 0; i < item.express; i++) {
-                msg += `${expressNo}. ${DbOrder.orderStatusEmotes[order.status]} \`${clientUser.tag}\`\n`;
-                expressNo++;
+            msg += `__⚠️Express slots are currently unavailable⚠️__\n`;
+        } else {
+            for(const item of expressItems) {
+                const order = await DbOrder.getItemOrder(item);
+                const clientUser = await interaction.client.users.fetch(order.user_id);
+                for(let i = 0; i < item.express; i++) {
+                    msg += `${expressNo}. ${DbOrder.orderStatusEmotes[order.status]} \`${clientUser.tag}\`\n`;
+                    expressNo++;
+                }
             }
-        }
-        while(expressNo < 3) {
-            msg += `${expressNo + 1}. Free Spot\n`;
-            expressNo++;
-        }        
+            while(expressNo < 3) {
+                msg += `${expressNo + 1}. Free Spot\n`;
+                expressNo++;
+            }   
+        }     
 
         const commissionsEmbed = new CustomEmbed(interaction)
         .setTitle('Commission List')
