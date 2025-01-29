@@ -41,7 +41,7 @@ module.exports = class MessageHelper {
 				} 
 				warning = new CustomEmbed(interaction)
 					.setTitle(`Are you sure you want to order the following Emotes?`)
-					.setDescription(`${MessageHelper.displayOrderItems(data.items)}\nThe total cost of this order will be\n## ${discountMsg ? discountMsg : ""}${discountCost.toFixed(2)}€${specialMsg}\n${data.coupon ? `__You applied a ${data.coupon.emoji} ${data.coupon.name} coupon.__` : ``}`)
+					.setDescription(`${MessageHelper.displayOrderItems(data.items)}\nThe total cost of this order will be\n## ${discountMsg ? discountMsg : ""}${discountCost.toFixed(2)}€${specialMsg}\n${data.coupon ? `__You applied a ${data.coupon.emoji} ${data.coupon.name} coupon.__` : ``}\n\n⚠️ Disclaimer: Due to taxes and other government-based reasons your full name and address will be needed for the contract. Your data will not be used outside of the contract. ⚠️`)
 				break;
 			case "leaderboard":
 				warning = new CustomEmbed(interaction)

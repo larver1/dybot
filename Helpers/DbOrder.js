@@ -265,7 +265,8 @@ module.exports = class DbOrder {
      * @param {Coupons} coupon - The coupon being used
      */
     static getOrderDiscount(orderCost, coupon) {
-        return Math.round(orderCost * ((100 - coupon.discount) / 100));
+        let newCost = orderCost * ((100 - coupon.discount) / 100);
+        return Math.round((newCost + Number.EPSILON) * 100) /100;
     }
 
     /**
