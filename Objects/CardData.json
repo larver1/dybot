@@ -1,0 +1,14 @@
+[
+    {
+        "name": "Bob",
+        "image": "https://media.discordapp.net/attachments/1301125625175740487/1301125798350032927/TCG-Proper_20241030110051.png?ex=678637d4&is=6784e654&hm=c71a176e4d14312f7962e46a6f72b8d6d9be648b98d9aacf3466434324b4bf93&=&format=webp&quality=lossless&width=503&height=671",
+        "rarity": "Common",
+        "id": 1,
+        "stats": {
+            "atk": 28,
+            "def": 30,
+            "hp": 45,
+            "luck": 2
+        }
+    }
+]
