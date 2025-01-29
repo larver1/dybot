@@ -172,7 +172,7 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 	 */
 	Users.prototype.getCouponsOfValue = async function(value) {
 		const allCoupons = await this.getCoupons();
-		return allCoupons.filter(userCoupon => userCoupon.coupon.value == value && userCoupon.amount > 0);
+		return allCoupons.filter(userCoupon => userCoupon.coupon.value >= value && userCoupon.amount > 0);
 	};
 
 	/**

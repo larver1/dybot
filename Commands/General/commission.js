@@ -123,7 +123,7 @@ module.exports = {
         const sortedCoupons = coupons.sort((a, b) => b.value - a.value);
         for(let i = 0; i < sortedCoupons.length; i++) {
             const coupon = sortedCoupons[i];
-            if(value > coupon.value) return coupon.value;
+            if(value <= coupon.value) return coupon.value;
         }
     },
     /**
@@ -199,8 +199,7 @@ module.exports = {
                     return interaction.editReply({ content: `${interaction.user}, you must add at least one item before confirming an order` }).catch(e => console.log(e));
                 } else {
                     collector.stop();
-                    const orderValue = await this.checkOrderValue(totalCost);
-                    const availableCoupons = await user.getCouponsOfValue(orderValue);
+                    const availableCoupons = await user.getCouponsOfValue(totalCost);
 
                     if(availableCoupons.length) return this.selectCoupon(interaction, user, orderItems, availableCoupons);
                     else return this.confirmOrder(interaction, user, orderItems);
