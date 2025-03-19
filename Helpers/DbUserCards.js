@@ -12,7 +12,7 @@ module.exports = class DbUserCards {
      * @returns 
      */
     static findCardByName(name) {
-        return CardData.find(card => card.name == name);
+        return CardData.find(card => card.name.toLowerCase() == name.toLowerCase());
     }
 
 	/**
@@ -23,14 +23,26 @@ module.exports = class DbUserCards {
     static async findUserCardByName(id, name) {
         // Check if card by name exists
         const cardObj = this.findCardByName(name);
-        if(!cardObj) return null;
+        if(!cardObj && name.toLowerCase() != "all") return null;
 
         // Check if user has any of the specific card
-		const userCards = await UserCards.findAll({ where: { user_id: id, dex_id: cardObj.id } });
+		const userCards = name.toLowerCase() == "all"  
+         ? await UserCards.findAll({ where: { user_id: id } })
+         : await UserCards.findAll({ where: { user_id: id, dex_id: cardObj.id } });
 
         // Attach JSON data to each card
-		for(let i = 0; i < userCards.length; i++) { userCards[i].data = cardObj; userCards[i].index = i; }
+		for(let i = 0; i < userCards.length; i++) { userCards[i].data = CardData[userCards[i].dex_id - 1]; userCards[i].index = i; }
         return userCards;
+    }
+
+    /**
+     * Adds card of ID to user
+     * @param {Number} userId - User's ID
+     * @param {Number} id - Card's ID
+     */
+    static async giveUserCardByID(userId, id) {
+        await UserCards.create({ user_id: userId, dex_id: id });
+        return true;
     }
 
 }

@@ -26,10 +26,13 @@ module.exports = {
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
 	 */
 	async execute(interaction) {
-        const cards = await DbUserCards.findUserCardByName(interaction.user.id, "Bob");
+        const cardName = interaction.options.getString('name');
+        const cards = await DbUserCards.findUserCardByName(interaction.user.id, cardName);
+        if(!cards.length) return interaction.editReply(`You have no cards of the name \`${cardName}\`.`);
+        
         const collector = new CustomCollector(interaction, {}, async() => {});
-        collector.addSelectMenu(cards.map(card => ({ label: card.data.name, description: `idk`, value: card.index }) ), async(index) => {
-            await interaction.editReply(cards[0].data.image).catch(e => console.log(e));
+        collector.addSelectMenu(cards.map(card => ({ label: card.data.name, description: card.data.rarity, value: card.index, image: card.data.image }) ), async(i) => {
+            await interaction.editReply(cards[parseInt(i.values[0])].data.image).catch(e => console.log(e));
         });
         await collector.start();
     },
