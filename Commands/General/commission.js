@@ -153,7 +153,7 @@ module.exports = {
 
         const orderEmbed = new CustomEmbed(interaction)
         .setTitle(`Your Order`)
-        .setDescription(`Add items to your order. Once you are finished, hit "confirm".\n${orderItemsMsg}`)
+        .setDescription(`Add items to your order. Once you are finished, hit "confirm".\n${orderItemsMsg}\n\n⚠️ Disclaimer: Due to taxes and other government-based reasons your full name and address will be needed for the contract. Your data will not be used outside of the contract. ⚠️`)
 
         const addItemButton = new ActionRowBuilder()
         .addComponents(			
