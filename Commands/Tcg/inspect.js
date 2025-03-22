@@ -28,14 +28,15 @@ module.exports = {
         const cards = await DbUserCards.findUserCardByName(interaction.user.id, cardName);
         if(!cards.length) return interaction.editReply(`You have no cards of the name \`${cardName}\`.`);
 
-        const card = await new CardCanvas(interaction, cards[0].data);
-        await card.createCard();
-        await interaction.editReply({ files: [card.getCard()] }).catch(e => console.error(e));
-        return;
-
         const collector = new CustomCollector(interaction, {}, async() => {});
-        collector.addSelectMenu(cards.map(card => ({ label: card.data.name, description: card.data.rarity, value: card.index, image: card.data.image }) ), async(i) => {
-            await interaction.editReply(cards[parseInt(i.values[0])].data.image).catch(e => console.log(e));
+        collector.addSelectMenu(cards.map(card => ({ label: card.data.name, description: card.data.rarity, value: card.index, cardToRender: card.data.image }) ), async(i) => {
+            const selectedCard = cards[parseInt(i.values[0])];
+            if(!selectedCard.render) {
+                const render = new CardCanvas(interaction, selectedCard.data);
+                await render.createCard();
+                selectedCard.render = render.getCard();
+            }
+            await interaction.editReply({ files: [selectedCard.render] }).catch(e => console.log(e));
         });
         await collector.start();
     },

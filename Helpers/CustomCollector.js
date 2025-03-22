@@ -83,7 +83,7 @@ module.exports = class CustomCollector {
      * @param {Array} data - Data passed in 
      * @param {Function} callbackFn - The function to call when an item is selected
      */
-    addSelectMenu(data, callbackFn) {
+    async addSelectMenu(data, callbackFn) {
         let selectionList = [];
         selectionList[0] = [];
         let page = 0;
@@ -103,8 +103,8 @@ module.exports = class CustomCollector {
 			selectionList[page].push({
 				label: data[i].label,
 				description: data[i].description,
-				value: data[i].value ? `${data[i].value}` : `${i}`
-			});
+				value: data[i].value ? `${data[i].value}` : `${i}`,
+            });
         }
 
         this.page = 0;

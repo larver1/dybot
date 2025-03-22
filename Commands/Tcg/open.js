@@ -5,6 +5,7 @@ const MessageHelper = require('../../Helpers/MessageHelper.js');
 const DbUserCards = require('../../Helpers/DbUserCards.js');
 const DbUser = require('../../Helpers/DbUser.js');
 const CardBuilder = require('../../Helpers/CardBuilder.js');
+const CardCanvas = require('../../Helpers/CardCanvas.js');
 
 /**
  * @param {SlashCommandBuilder} data - Command data.
@@ -24,11 +25,17 @@ module.exports = {
 	async execute(interaction) {
         // Get cards and store to user
         const pack = await CardBuilder.openPack();
-        for(const card of pack) await DbUserCards.giveUserCardByID(interaction.user.id, card.id);
+        const renders = [];
+        for(const card of pack) {
+            await DbUserCards.giveUserCardByID(interaction.user.id, card.id);
+            const render = new CardCanvas(interaction, card);
+            await render.createCard();
+            renders.push(render.getCard());
+        }
 
         // Display to user
         const collector = new CustomCollector(interaction, {}, async() => {});
-        collector.images = pack.map(card => card.image);
+        collector.images = renders;
         collector.addImagePages({ noPrev: true, disappearOnLast: true });
         await collector.start();    
     },
