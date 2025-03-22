@@ -1,9 +1,7 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputStyle, TextInputBuilder } = require('discord.js');
-const CustomEmbed = require('../../Helpers/CustomEmbed.js');
 const CustomCollector = require('../../Helpers/CustomCollector.js');
-const MessageHelper = require('../../Helpers/MessageHelper.js');
 const DbUserCards = require('../../Helpers/DbUserCards.js');
-const DbUser = require('../../Helpers/DbUser.js');
+const CardCanvas = require('../../Helpers/CardCanvas.js');
 
 /**
  * @param {SlashCommandBuilder} data - Command data.
@@ -29,7 +27,12 @@ module.exports = {
         const cardName = interaction.options.getString('name');
         const cards = await DbUserCards.findUserCardByName(interaction.user.id, cardName);
         if(!cards.length) return interaction.editReply(`You have no cards of the name \`${cardName}\`.`);
-        
+
+        const card = await new CardCanvas(interaction, cards[0].data);
+        await card.createCard();
+        await interaction.editReply({ files: [card.getCard()] }).catch(e => console.error(e));
+        return;
+
         const collector = new CustomCollector(interaction, {}, async() => {});
         collector.addSelectMenu(cards.map(card => ({ label: card.data.name, description: card.data.rarity, value: card.index, image: card.data.image }) ), async(i) => {
             await interaction.editReply(cards[parseInt(i.values[0])].data.image).catch(e => console.log(e));
