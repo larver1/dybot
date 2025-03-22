@@ -36,7 +36,7 @@ module.exports = {
                 await render.createCard();
                 selectedCard.render = render.getCard();
             }
-            await interaction.editReply({ files: [selectedCard.render] }).catch(e => console.log(e));
+            await interaction.editReply({ files: [selectedCard.render] }).catch(e => console.error(e));
         });
         await collector.start();
     },

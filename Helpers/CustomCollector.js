@@ -133,7 +133,7 @@ module.exports = class CustomCollector {
                         .setOptions(selectMenu.selectionList[this.page])
                         .setPlaceholder(`[Page ${this.page + 1}/${this.maxPages}] Select an Option`);
 
-                    this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.log(e));   
+                    this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));   
                 }, prevPageEmoji),
                 this.createButton('Next', ButtonStyle.Secondary, async() => {
                     // Update page number
@@ -146,7 +146,7 @@ module.exports = class CustomCollector {
                         .setOptions(selectMenu.selectionList[this.page])
                         .setPlaceholder(`[Page ${this.page + 1}/${this.maxPages}] Select an Option`);
 
-                    this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.log(e));
+                    this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));
                 }, nextPageEmoji)
             ]);
         }
@@ -177,7 +177,7 @@ module.exports = class CustomCollector {
                         .setTitle(`[Page ${this.page + 1}/${this.maxPages}] ${title}`)
                         .setDescription(embed.descriptionList[this.page])
 
-                    this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.log(e));   
+                    this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));   
                 }, prevPageEmoji),
                 this.createButton('Next', ButtonStyle.Secondary, async() => {
                     // Update page number
@@ -190,7 +190,7 @@ module.exports = class CustomCollector {
                         .setTitle(`[Page ${this.page + 1}/${this.maxPages}] ${title}`)
                         .setDescription(embed.descriptionList[this.page])
 
-                    this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.log(e));  
+                    this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));  
                 }, nextPageEmoji)
             ]);
         }
@@ -211,7 +211,7 @@ module.exports = class CustomCollector {
                 if(this.page > 0) this.page--;
                 else this.page = this.maxPages - 1;
 
-                this.message = await this.interaction.editReply({ content: `Card [${this.page + 1}/${this.maxPages}]`, files: [this.images[this.page]], components: this.components }).catch(e => console.log(e));   
+                this.message = await this.interaction.editReply({ content: `Card [${this.page + 1}/${this.maxPages}]`, files: [this.images[this.page]], components: this.components }).catch(e => console.error(e));   
             }, prevPageEmoji));
 
             if(!options.noNext) buttonRow.push(this.createButton('Next', ButtonStyle.Secondary, async() => {
@@ -223,7 +223,7 @@ module.exports = class CustomCollector {
                 if(options.disappearOnLast && this.page == this.maxPages - 1) 
                     this.components = [];
 
-                this.message = await this.interaction.editReply({ content: `Card [${this.page + 1}/${this.maxPages}]`, files: [this.images[this.page]], components: this.components }).catch(e => console.log(e));   
+                this.message = await this.interaction.editReply({ content: `Card [${this.page + 1}/${this.maxPages}]`, files: [this.images[this.page]], components: this.components }).catch(e => console.error(e));   
             }, nextPageEmoji));
 
             this.addButtonRow(buttonRow);
@@ -278,7 +278,7 @@ module.exports = class CustomCollector {
      */
     async init() {
         this.initFilter();
-        this.message = await this.interaction.editReply({ content: `Collector has started`, embeds: this.embeds, files: this.images.length ? [this.images[0]] : [], components: this.components }).catch(e => console.log(e));   
+        this.message = await this.interaction.editReply({ content: `Collector has started`, embeds: this.embeds, files: this.images.length ? [this.images[0]] : [], components: this.components }).catch(e => console.error(e));   
         this.collector = this.message.createMessageComponentCollector({ 
             filter: this.checkFilter, 
             time: this.options.time ? this.options.time : 300_000, 
@@ -295,15 +295,15 @@ module.exports = class CustomCollector {
 
         await this.init();
         this.collector.on('collect', async i => {
-            await i.deferUpdate().catch(e => {console.log(e)});
+            await i.deferUpdate().catch(e => {console.error(e)});
             this.callbackFn(i);
             this.componentIds[i.customId](i);
         });
         this.collector.on('end', async collected => {
 			if(collected.size <= 0) {
-				return this.interaction.editReply({ content: "The command timed out.", components: [], embeds: [] }).catch(e => console.log(e));	
+				return this.interaction.editReply({ content: "The command timed out.", components: [], embeds: [] }).catch(e => console.error(e));	
 			} else {
-                return this.interaction.editReply({ components: [] }).catch(e => console.log(e));
+                return this.interaction.editReply({ components: [] }).catch(e => console.error(e));
             }
         });
     }

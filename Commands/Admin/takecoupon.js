@@ -39,7 +39,7 @@ module.exports = {
 	async execute(interaction) {
 
         if(interaction.client.config.adminId != interaction.user.id)
-            return interaction.editReply({ content: `You do not have permission to use this command.` }).catch(e => console.log(e));
+            return interaction.editReply({ content: `You do not have permission to use this command.` }).catch(e => console.error(e));
 
         const type = interaction.options.getString('type');
         const amount = interaction.options.getInteger('amount');
