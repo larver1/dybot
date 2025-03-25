@@ -22,6 +22,26 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.INTEGER,
 			defaultValue: 1
 		},
+		// Atk IV of card
+		atk_iv: {
+			type: DataTypes.INTEGER,
+			defaultValue: Math.ceil(Math.random() * 10)
+		},
+		// Def IV of card
+		def_iv: {
+			type: DataTypes.INTEGER,
+			defaultValue: Math.ceil(Math.random() * 10)
+		},
+		// HP IV of card
+		hp_iv: {
+			type: DataTypes.INTEGER,
+			defaultValue: Math.ceil(Math.random() * 10)
+		},
+		// Luck IV of card
+		luck_iv: {
+			type: DataTypes.INTEGER,
+			defaultValue: Math.ceil(Math.random() * 10)
+		},
 		// The amount of the item owned
 		first_edition: {
 			type: DataTypes.BOOLEAN,

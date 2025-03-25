@@ -59,7 +59,7 @@ module.exports = class CardCanvas {
 
         // Stats
         this.setFont(60);
-        await this.displayStat(`Lv.${this.card.lvl}`, 378 - this.ctx.measureText(`Lv.${this.card.lvl}`).width + 220, 125);
+        await this.displayStat(`Lv.${this.card.lvl}`, 378 - this.ctx.measureText(`Lv.${this.card.lvl}`).width + 270, 125);
 
         this.setFont(100);
         await this.displayStat(`${this.cardObj.stats.atk}`, 378 - this.ctx.measureText(this.cardObj.stats.atk).width - 70, 730 + 20);
@@ -79,7 +79,6 @@ module.exports = class CardCanvas {
     }
 
     async setFont(size){
-        //Uses specific font
         this.ctx.font = `${size}px Code`;
     }
 
