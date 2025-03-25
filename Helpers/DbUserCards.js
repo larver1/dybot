@@ -41,8 +41,8 @@ module.exports = class DbUserCards {
      * @param {Number} id - Card's ID
      */
     static async giveUserCardByID(userId, id) {
-        await UserCards.create({ user_id: userId, dex_id: id });
-        return true;
+        const card = await UserCards.create({ user_id: userId, dex_id: id, lvl: 1 });
+        return card;
     }
 
 }

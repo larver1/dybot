@@ -32,7 +32,7 @@ module.exports = {
         collector.addSelectMenu(cards.map(card => ({ label: card.data.name, description: card.data.rarity, value: card.index, cardToRender: card.data.image }) ), async(i) => {
             const selectedCard = cards[parseInt(i.values[0])];
             if(!selectedCard.render) {
-                const render = new CardCanvas(interaction, selectedCard.data);
+                const render = new CardCanvas(interaction, selectedCard);
                 await render.createCard();
                 selectedCard.render = render.getCard();
             }

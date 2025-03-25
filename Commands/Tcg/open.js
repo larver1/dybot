@@ -31,8 +31,8 @@ module.exports = {
         const pack = await CardBuilder.openPack();
         const renders = [];
         for(const card of pack) {
-            await DbUserCards.giveUserCardByID(interaction.user.id, card.id);
-            const render = new CardCanvas(interaction, card);
+            const newCard = await DbUserCards.giveUserCardByID(interaction.user.id, card.id);
+            const render = new CardCanvas(interaction, newCard);
             await render.createCard();
             renders.push(render.getCard());
         }

@@ -17,6 +17,11 @@ module.exports = (sequelize, DataTypes) => {
 		dex_id: {
 			type: DataTypes.INTEGER,
 		},
+		// Level of card
+		lvl: {
+			type: DataTypes.INTEGER,
+			defaultValue: 1
+		},
 		// The amount of the item owned
 		first_edition: {
 			type: DataTypes.BOOLEAN,
