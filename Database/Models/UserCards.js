@@ -47,7 +47,19 @@ module.exports = (sequelize, DataTypes) => {
 		first_edition: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: 0
-		}
+		},
+		// Description
+		desc: {
+			type: DataTypes.VIRTUAL,
+			get() {
+				msg = "";
+				if(this.first_edition) msg += `1️⃣`; 
+				if(this.gold) msg += `🪙`;
+				if(this.star) msg += `🌠`;
+				if(this.holo) msg += `🌈`;
+				return msg;				
+			}
+		},
 	}, 
 	{
 	timestamps: true,

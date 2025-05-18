@@ -26,10 +26,10 @@ module.exports = {
 	async execute(interaction) {
         const cardName = interaction.options.getString('name');
         const cards = await DbUserCards.findUserCardByName(interaction.user.id, cardName);
-        if(!cards.length) return interaction.editReply(`You have no cards of the name \`${cardName}\`.`);
+        if(!cards || !cards.length) return interaction.editReply(`You have no cards of the name \`${cardName}\`.`);
 
         const collector = new CustomCollector(interaction, {}, async() => {});
-        collector.addSelectMenu(cards.map(card => ({ label: card.data.name, description: card.data.rarity, value: card.index, cardToRender: card.data.image }) ), async(i) => {
+        collector.addSelectMenu(cards.map(card => ({ label: `${card.data.name} (${card.rarity})`, description: card.desc, value: card.index, cardToRender: card.data.image }) ), async(i) => {
             const selectedCard = cards[parseInt(i.values[0])];
             if(!selectedCard.render) {
                 const render = new CardCanvas(interaction, selectedCard);

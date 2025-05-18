@@ -6,6 +6,7 @@ const DbUserCards = require('../../Helpers/DbUserCards.js');
 const DbUser = require('../../Helpers/DbUser.js');
 const CardBuilder = require('../../Helpers/CardBuilder.js');
 const CardCanvas = require('../../Helpers/CardCanvas.js');
+const CardsView = require('../../Helpers/CardsView.js');
 
 /**
  * @param {SlashCommandBuilder} data - Command data.
@@ -25,20 +26,25 @@ module.exports = {
 	async execute(interaction) {
 
         const user = await DbUser.findUser(interaction.user.id);
-        if(!user.canOpenPack()) return interaction.editReply({ content: `You opened a pack <t:${(user.last_pack / 1000)}:R>. You can only open a pack every \`6 hours\`.` }).catch(e => console.error(e));
+        if(!user.canOpenPack() && !interaction.client.config.debug) return interaction.editReply({ content: `You opened a pack <t:${(user.last_pack / 1000)}:R>. You can only open a pack every \`6 hours\`.` }).catch(e => console.error(e));
 
         // Get cards and store to user
         const pack = await CardBuilder.openPack();
 
         const renders = [];
+        const fullImages = [];
         for(const card of pack) {
             const newCard = await DbUserCards.giveUserCard(interaction.user.id, card);
+            fullImages.push(newCard);
             const render = new CardCanvas(interaction, newCard);
             await render.createCard();
             renders.push(render.getCard());
         }
-        await user.resetPackTimer();
 
+        const fullImage = new CardsView(interaction, fullImages);
+        await fullImage.createCards();
+        renders.push(fullImage.getCards());
+        await user.resetPackTimer();
 
         // Display to user
         const collector = new CustomCollector(interaction, {}, async() => {});
