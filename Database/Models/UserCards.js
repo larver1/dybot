@@ -12,12 +12,33 @@ module.exports = (sequelize, DataTypes) => {
 		// Discord user ID
 		user_id: {
 			type: DataTypes.STRING,
+			allowNull: false,
 		},
-		// The type of card they own
+		// The ID of card they own
 		dex_id: {
 			type: DataTypes.INTEGER,
+			allowNull: false,
 		},
-		// The amount of the item owned
+		// Rarity of card
+		rarity: {
+			type: DataTypes.STRING,
+			allowNull: false,
+		},
+		// Star
+		star: {
+			type: DataTypes.BOOLEAN,
+			allowNull: 0,
+		},
+		gold: {
+			type: DataTypes.BOOLEAN,
+			allowNull: 0,
+		},
+		// Holo
+		holo: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: 0
+		},
+		// First edition
 		first_edition: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: 0

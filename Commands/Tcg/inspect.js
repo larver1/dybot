@@ -28,7 +28,7 @@ module.exports = {
         const cards = await DbUserCards.findUserCardByName(interaction.user.id, cardName);
         if(!cards.length) return interaction.editReply(`You have no cards of the name \`${cardName}\`.`);
 
-        const card = await new CardCanvas(interaction, cards[0].data);
+        const card = await new CardCanvas(interaction, cards[0]);
         await card.createCard();
         await interaction.editReply({ files: [card.getCard()] }).catch(e => console.error(e));
         return;

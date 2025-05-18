@@ -38,10 +38,19 @@ module.exports = class DbUserCards {
     /**
      * Adds card of ID to user
      * @param {Number} userId - User's ID
-     * @param {Number} id - Card's ID
+     * @param {Object} card - Card's details
      */
-    static async giveUserCardByID(userId, id) {
-        await UserCards.create({ user_id: userId, dex_id: id });
+    static async giveUserCard(userId, card) {
+        if(card.details.star && card.details.gold) throw Error('Card can\'t be both gold and star');
+        await UserCards.create({ 
+            user_id: userId, 
+            dex_id: parseInt(card.id),
+            rarity: card.rarity,
+            star: card.details.star,
+            gold: card.details.gold,
+            holo: card.details.holo,
+            first_edition: true
+        });
         return true;
     }
 

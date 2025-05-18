@@ -7,8 +7,13 @@ const cardData = JSON.parse(fs.readFileSync('./Objects/CardData.json'));
 async function loadAssets(){
     // Load all card images
     for(const card of cardData) {
-        if(!assets[card.name]) assets[card.name] = {};
-        assets[card.name][card.rarity] = await Canvas.loadImage(`./Assets/Cards/${card.name}/${card.rarity}.png`);
+        assets[card.id] = {};
+        const dir = await fs.readdirSync(`./Assets/Cards/${card.id}`);
+        for(const file of dir) {
+            if(file.length != 8) throw Error('File name is not in correct format.');
+            assets[card.id][file] = await Canvas.loadImage(`./Assets/Cards/${card.id}/${file}`);
+        }
+        console.log("finished loading cards assets.");
     }
 }
 
@@ -81,8 +86,23 @@ module.exports = class CardCanvas {
             return `${(value / 100000).toFixed(0)}m`;
     }
 
+    getCardName() {
+        this.cardName = "";
+        this.cardName += this.cardObj.rarity[0];
+        
+        if(this.cardObj.details.gold) this.cardName += "G";
+        else if(this.cardObj.details.star) this.cardName += "S";
+        else this.cardName += "N";
+
+        this.cardName += this.cardObj.details.holo ? "H" : "N";
+        this.cardName += this.cardObj.data.first_edition ? "1" : "0";
+
+        if(this.cardName.length != 4) throw Error('Card name not processed correctly.');
+    }
+
     async addCardTemplate(){
-        this.ctx.drawImage(assets[this.cardObj.name][this.cardObj.rarity], 0, 0, this.width, this.height); 
+        this.getCardName();
+        this.ctx.drawImage(assets[this.cardObj.id][`${this.cardName}.png`], 0, 0, this.width, this.height); 
     }
 
     async setFont(size){

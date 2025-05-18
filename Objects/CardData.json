@@ -1,33 +1,7 @@
 [
     {
         "name": "Dyron",
-        "image": "https://media.discordapp.net/attachments/1155774786451017829/1351981718881570816/TCG-Proper2_20250319191208.png?ex=67dc5a98&is=67db0918&hm=d5e73e8dffd7a657c4c0dc51ceac79eca1437974544a91935f1ef008ac0168e4&=&format=webp&quality=lossless&width=642&height=856",
-        "rarity": "Common",
-        "id": 1,
-        "stats": {
-            "atk": 28,
-            "def": 30,
-            "hp": 45,
-            "luck": 2
-        }
-    },
-    {
-        "name": "Dyron",
-        "image": "https://cdn.discordapp.com/attachments/1155774786451017829/1351981725982523422/TCG-Proper2_20250319191216.png?ex=67dc5a9a&is=67db091a&hm=f393cead5f83f1068f8a687abfdad06957376bb117bd97e1cafcd36efc567dfb&",
-        "rarity": "Uncommon",
-        "id": 2,
-        "stats": {
-            "atk": 28,
-            "def": 30,
-            "hp": 45,
-            "luck": 2
-        }
-    },
-    {
-        "name": "Dyron",
-        "image": "https://cdn.discordapp.com/attachments/1155774786451017829/1351981726527651850/TCG-Proper2_20250319191226.png?ex=67dc5a9a&is=67db091a&hm=7cde8bee43bc17e4bb4adef2fe8a7bb2c458084820b8d072f18c1dcb35b30eed&",
-        "rarity": "Rare",
-        "id": 3,
+        "id": "0001",
         "stats": {
             "atk": 28,
             "def": 30,

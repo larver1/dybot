@@ -24,7 +24,7 @@ module.exports = {
 	async execute(interaction) {
         // Get cards and store to user
         const pack = await CardBuilder.openPack();
-        for(const card of pack) await DbUserCards.giveUserCardByID(interaction.user.id, card.id);
+        for(const card of pack) await DbUserCards.giveUserCard(interaction.user.id, card);
 
         // Display to user
         const collector = new CustomCollector(interaction, {}, async() => {});
