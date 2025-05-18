@@ -42,7 +42,7 @@ module.exports = class DbUserCards {
      */
     static async giveUserCard(userId, card) {
         if(card.details.star && card.details.gold) throw Error('Card can\'t be both gold and star');
-        await UserCards.create({ 
+        const dbCard = await UserCards.create({ 
             user_id: userId, 
             dex_id: parseInt(card.id),
             rarity: card.rarity,
@@ -52,7 +52,8 @@ module.exports = class DbUserCards {
             lvl: 1,
             first_edition: true
         });
-        return true;
+        dbCard.data = card;
+        return dbCard;
     }
 
 }

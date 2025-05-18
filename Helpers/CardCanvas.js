@@ -81,21 +81,21 @@ module.exports = class CardCanvas {
 
     getCardName() {
         this.cardName = "";
-        this.cardName += this.cardObj.rarity[0];
+        this.cardName += this.card.rarity[0];
         
-        if(this.cardObj.details.gold) this.cardName += "G";
-        else if(this.cardObj.details.star) this.cardName += "S";
+        if(this.card.gold) this.cardName += "G";
+        else if(this.card.star) this.cardName += "S";
         else this.cardName += "N";
 
-        this.cardName += this.cardObj.details.holo ? "H" : "N";
-        this.cardName += this.cardObj.data.first_edition ? "1" : "0";
+        this.cardName += this.card.holo ? "H" : "N";
+        this.cardName += this.card.first_edition ? "1" : "0";
 
         if(this.cardName.length != 4) throw Error('Card name not processed correctly.');
     }
 
     async addCardTemplate(){
         this.getCardName();
-        this.ctx.drawImage(assets[this.cardObj.id][`${this.cardName}.png`], 0, 0, this.width, this.height); 
+        this.ctx.drawImage(assets[this.card.data.id][`${this.cardName}.png`], 0, 0, this.width, this.height); 
     }
 
     async setFont(size){

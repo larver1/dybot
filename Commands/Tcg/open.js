@@ -30,11 +30,9 @@ module.exports = {
         // Get cards and store to user
         const pack = await CardBuilder.openPack();
 
-        for(const card of pack) await DbUserCards.giveUserCard(interaction.user.id, card);
-
         const renders = [];
         for(const card of pack) {
-            const newCard = await DbUserCards.giveUserCardByID(interaction.user.id, card.id);
+            const newCard = await DbUserCards.giveUserCard(interaction.user.id, card);
             const render = new CardCanvas(interaction, newCard);
             await render.createCard();
             renders.push(render.getCard());
