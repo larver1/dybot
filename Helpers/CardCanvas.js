@@ -21,11 +21,12 @@ loadAssets();
 
 
 module.exports = class CardCanvas {
-    constructor(interaction, cardObj) {
+    constructor(interaction, card) {
         this.scale = 0.25
         this.width = 768;
         this.height = 1024;
-        this.cardObj = cardObj;
+        this.card = card;
+        this.cardObj = card.data;
         this.attachment;
         this.interaction = interaction;
         return;
@@ -59,12 +60,15 @@ module.exports = class CardCanvas {
             return new Error(`No card stats on Card.addTextElements()`);
         }
 
-        this.setFont(100);
         this.ctx.fillStyle = "#ff0000";
 
         // Stats
-        await this.displayStat(`${this.cardObj.stats.atk}`, 378 - this.ctx.measureText(`${this.formatStat(this.cardObj.stats.atk)}`).width - 70, 730 + 20);
-        await this.displayStat(`${this.cardObj.stats.hp}`, 378 - this.ctx.measureText(`${this.formatStat(this.cardObj.stats.hp)}`).width - 70, 855 + 60);
+        this.setFont(60);
+        await this.displayStat(`Lv.${this.card.lvl}`, 378 - this.ctx.measureText(`Lv.${this.card.lvl}`).width + 270, 125);
+
+        this.setFont(100);
+        await this.displayStat(`${this.cardObj.stats.atk}`, 378 - this.ctx.measureText(this.cardObj.stats.atk).width - 70, 730 + 20);
+        await this.displayStat(`${this.cardObj.stats.hp}`, 378 - this.ctx.measureText(this.cardObj.stats.hp).width - 70, 855 + 60);
 
         await this.displayStat(`${this.cardObj.stats.def}`, 408 + 120, 730 + 20);
         await this.displayStat(`${this.cardObj.stats.luck}`, 408 + 120, 855 + 60);
@@ -72,18 +76,7 @@ module.exports = class CardCanvas {
 
     async displayStat(text, x, y) {
         this.ctx.fillStyle = "#ffffff";
-        this.ctx.fillText(`${this.formatStat(text)}`, x, y);
-    }
-
-    formatStat(value) {
-        if(value < 1000)
-            return `${value}`;
-        if(value < 10000)
-            return `${(value / 1000).toFixed(1)}k`;
-        if(value < 100000)
-            return `${(value / 1000).toFixed(0)}k`;
-        if(value < 10000000)
-            return `${(value / 100000).toFixed(0)}m`;
+        this.ctx.fillText(text, x, y);
     }
 
     getCardName() {
@@ -106,7 +99,6 @@ module.exports = class CardCanvas {
     }
 
     async setFont(size){
-        //Uses specific font
         this.ctx.font = `${size}px Code`;
     }
 

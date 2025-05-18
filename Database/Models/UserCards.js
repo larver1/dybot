@@ -38,6 +38,11 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.BOOLEAN,
 			defaultValue: 0
 		},
+		// Level of card
+		lvl: {
+			type: DataTypes.INTEGER,
+			defaultValue: 1
+		},
 		// First edition
 		first_edition: {
 			type: DataTypes.BOOLEAN,

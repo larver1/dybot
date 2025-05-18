@@ -85,15 +85,15 @@ module.exports = class MessageHelper {
 		const components = [row];
 		
 		let interactionReply;
-		if(editMsg) interactionReply = await editMsg.edit({ content: content, embeds: embeds, components: components }).catch(e => console.log(e));
-		else interactionReply = await interaction.editReply({ content: content, embeds: embeds, components: components }).catch(e => console.log(e));
+		if(editMsg) interactionReply = await editMsg.edit({ content: content, embeds: embeds, components: components }).catch(e => console.error(e));
+		else interactionReply = await interaction.editReply({ content: content, embeds: embeds, components: components }).catch(e => console.error(e));
 
 		const filter = i => (i.user.id === interaction.user.id) && (i.customId == acceptId || i.customId == declineId);
 		const collector = await interactionReply.createMessageComponentCollector({ filter, time: 60000, errors: ['time'], max: noDefer ? 999 : 1 });
         
 		// Emit events when either confirm or decline button is pressed
 		collector.on('collect', async i => {
-            if(!noDefer) await i.deferUpdate().catch(e => {console.log(e)});
+            if(!noDefer) await i.deferUpdate().catch(e => {console.error(e)});
 			if(i.customId == acceptId)
 				collector.emit('confirmed', i);
             else if(i.customId == declineId)

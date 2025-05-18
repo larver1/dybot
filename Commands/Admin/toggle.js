@@ -39,7 +39,7 @@ module.exports = {
 	async execute(interaction) {
 
         if(interaction.client.config.adminId != interaction.user.id)
-            return interaction.editReply({ content: `You do not have permission to use this command.` }).catch(e => console.log(e));
+            return interaction.editReply({ content: `You do not have permission to use this command.` }).catch(e => console.error(e));
 
         // Check if user chose 'on' or 'off'
         const orderType = interaction.options.getString('order');
@@ -47,7 +47,7 @@ module.exports = {
         
         // Update toggle file with bool
         await this.updateJsonFile(orderType, isOn);
-        await interaction.editReply({ content: `**${orderType}** ➡️ **${isOn ? 'activated': 'deactivated'}**.` }).catch(e => console.log(e));
+        await interaction.editReply({ content: `**${orderType}** ➡️ **${isOn ? 'activated': 'deactivated'}**.` }).catch(e => console.error(e));
     },
     // Function to update a value in the JSON file
     async updateJsonFile(key, value) {

@@ -11,6 +11,6 @@ module.exports = {
 			if(!command) return;
 
 			// Fire command executor
-			await client.executeCommand.execute(interaction, command).catch(e => console.log(e));
+			await client.executeCommand.execute(interaction, command).catch(e => console.error(e));
     }
 }

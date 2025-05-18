@@ -49,6 +49,7 @@ module.exports = class DbUserCards {
             star: card.details.star,
             gold: card.details.gold,
             holo: card.details.holo,
+            lvl: 1,
             first_edition: true
         });
         return true;
