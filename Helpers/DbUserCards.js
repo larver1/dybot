@@ -1,6 +1,8 @@
 const { UserCards } = require('../Database/Objects');
 const fs = require('fs');
 const CardData = JSON.parse(fs.readFileSync('./Objects/CardData.json'));
+const { Op } = require("sequelize");
+
 /**
  * Interface for performing DB operations to a user.
  */
@@ -12,7 +14,7 @@ module.exports = class DbUserCards {
      * @returns 
      */
     static findCardByName(name) {
-        return CardData.find(card => card.name.toLowerCase() == name.toLowerCase());
+        return CardData.find(card => card.name.toLowerCase() === name.toLowerCase());
     }
 
 	/**
@@ -30,9 +32,36 @@ module.exports = class DbUserCards {
          ? await UserCards.findAll({ where: { user_id: id } })
          : await UserCards.findAll({ where: { user_id: id, dex_id: cardObj.id } });
 
-        // Attach JSON data to each card
-		for(let i = 0; i < userCards.length; i++) { userCards[i].data = CardData[userCards[i].dex_id - 1]; userCards[i].index = i; }
         return userCards;
+    }
+
+    /**
+     * Fetches all cards with given filters
+     * @param {string} id 
+     * @param {Object} filters 
+     */
+    static async findFilteredUserCards(id, filters) {
+        const query = {user_id: id};
+        if(filters.name) {
+            const cardId = this.findCardByName(filters.name)?.id;
+            if(cardId) query.card_id = cardId;
+            else query.card_id = 99999; // Make invalid ID so that nothing shows
+        } 
+        if(filters.rarity) query.rarity = filters.rarity;
+        if(filters.type) { 
+            switch(filters.type) {
+                case "normal": query.star = false; query.gold = false; break;
+                case "gold": query.gold = true; query.star = false; break;
+                case "star": query.star = true; query.gold = false; break;
+                default: break;
+            } 
+        }
+        if(filters.holo) query.holo = filters.holo == 'yes' ? true : false;
+        if(filters.minlevel || filters.maxlevel) query.lvl = {}
+        if(filters.minlevel) query.lvl[Op.gte] = filters.minlevel;
+        if(filters.maxlevel) query.lvl[Op.lte] = filters.maxlevel;
+
+        return UserCards.findAll({ where: query });
     }
 
     /**
@@ -52,7 +81,6 @@ module.exports = class DbUserCards {
             lvl: 1,
             first_edition: true
         });
-        dbCard.data = card;
         return dbCard;
     }
 

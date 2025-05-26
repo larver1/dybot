@@ -211,7 +211,8 @@ module.exports = class CustomCollector {
                 if(this.page > 0) this.page--;
                 else this.page = this.maxPages - 1;
 
-                this.message = await this.interaction.editReply({ content: `Card [${this.page + 1}/${this.maxPages}]`, files: [this.images[this.page]], components: this.components }).catch(e => console.error(e));   
+                const msgContent = this.images[this.page].msg ? this.images[i].msg : `Card [${this.page}/${this.maxPages - 2}]`;
+                this.message = await this.interaction.editReply({ content: msgContent, files: [this.images[this.page]], components: this.components }).catch(e => console.error(e));   
             }, prevPageEmoji));
 
             if(!options.noNext) buttonRow.push(this.createButton('Next', ButtonStyle.Secondary, async() => {
@@ -223,7 +224,8 @@ module.exports = class CustomCollector {
                 if(options.disappearOnLast && this.page == this.maxPages - 1) 
                     this.components = [];
 
-                this.message = await this.interaction.editReply({ content: `Card [${this.page + 1}/${this.maxPages}]`, files: [this.images[this.page]], components: this.components }).catch(e => console.error(e));   
+                const msgContent = this.images[this.page].msg ? this.images[this.page].msg : `Card [${this.page}/${this.maxPages - 2}]`;
+                this.message = await this.interaction.editReply({ content: msgContent, files: [this.images[this.page]], components: this.components }).catch(e => console.error(e));   
             }, nextPageEmoji));
 
             this.addButtonRow(buttonRow);
@@ -278,7 +280,7 @@ module.exports = class CustomCollector {
      */
     async init() {
         this.initFilter();
-        this.message = await this.interaction.editReply({ content: `Collector has started`, embeds: this.embeds, files: this.images.length ? [this.images[0]] : [], components: this.components }).catch(e => console.error(e));   
+        this.message = await this.interaction.editReply({ content: ` `, embeds: this.embeds, files: this.images.length ? [this.images[0]] : [], components: this.components }).catch(e => console.error(e));   
         this.collector = this.message.createMessageComponentCollector({ 
             filter: this.checkFilter, 
             time: this.options.time ? this.options.time : 300_000, 

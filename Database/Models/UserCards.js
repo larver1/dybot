@@ -1,3 +1,6 @@
+const fs = require('fs');
+const CardData = JSON.parse(fs.readFileSync('./Objects/CardData.json'));
+
 /**
  * Stores relationship between a user and a Coupons item. Describes how much of an item a user has.
  */
@@ -47,6 +50,20 @@ module.exports = (sequelize, DataTypes) => {
 		first_edition: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: 0
+		},
+		// Name
+		name: {
+			type: DataTypes.STRING,
+			get() {
+				return CardData[parseInt(this.dex_id) - 1].name;
+			}
+		},
+		// Card Data
+		data: {
+			type: DataTypes.JSON,
+			get() {
+				return CardData[parseInt(this.dex_id) - 1];
+			}
 		},
 		// Description
 		desc: {

@@ -4,11 +4,13 @@ const { AttachmentBuilder } = require('discord.js');
 
 module.exports = class CardsView {
     constructor(interaction, cardsToDisplay) {
-        this.scale = 0.20;
-        this.width = 3472;
-        this.height = 1224;
         this.cardsToDisplay = cardsToDisplay;
         this.numCards = this.cardsToDisplay.length;
+        this.dimensions = Card.getCardDimensions();
+        this.overlap = 100;
+        this.width = ((this.dimensions.width - this.overlap) * this.numCards) + (300 * (this.dimensions.scale));
+        this.height = this.dimensions.height;
+        this.scale = this.dimensions.scale;
 
         this.canvas = Canvas.createCanvas(this.width * this.scale, this.height * this.scale);
         this.ctx = this.canvas.getContext('2d');
@@ -30,7 +32,7 @@ module.exports = class CardsView {
             await card.createCard();
 
             // Draw card on canvas
-            this.ctx.drawImage(card.canvas, i * (this.canvas.width / this.numCards) - 20 * this.scale, 0, card.width * card.scale, card.height * card.scale);
+            this.ctx.drawImage(card.canvas, (i * (this.dimensions.width - (i ? this.overlap : 0))) * this.scale, 0, card.width * card.scale, card.height * card.scale);
         }
 
         this.attachment = new AttachmentBuilder(this.canvas.toBuffer(), 'cards.png');

@@ -12,24 +12,75 @@ const CardCanvas = require('../../Helpers/CardCanvas.js');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('inspect')
-		.setDescription('View and redeem coupons.')
+		.setDescription('Allows you to see all cards you own with the filters specified.')
         .addStringOption(name =>
             name.setName('name')
-            .setDescription('The name of the card you wish to inspect.')
-            .setRequired(true)
-    ),
-    help: `Allows you to see all cards you own with the name specified.`,
+            .setDescription('Character name.')
+            .setRequired(false))
+        .addStringOption(rarity =>
+            rarity.setName('rarity')
+            .setDescription('Rarity of card.')
+            .addChoices(
+                { name: 'Common', value: 'common'},
+                { name: 'Uncommon', value: 'uncommon'},
+                { name: 'Rare', value: 'rare'},  
+                { name: 'Legendary', value: 'legendary'},
+                { name: 'Mythical', value: 'mythical'},    
+            )
+            .setRequired(false))
+        .addStringOption(type =>
+            type.setName('type')
+            .setDescription('Type of card.')
+            .addChoices(
+                { name: 'Normal', value: 'normal'},
+                { name: 'Star', value: 'star'},  
+                { name: 'Gold', value: 'gold' }
+            )
+            .setRequired(false))
+        .addStringOption(holo =>
+            holo.setName('holo')
+            .setDescription('Include holos or exclude them.')
+            .addChoices(
+                { name: 'Yes', value: 'yes'},
+                { name: 'No', value: 'no'},  
+            )
+            .setRequired(false))
+        // .addStringOption(favourite =>
+        //     favourite.setName('favourite')
+        //     .setDescription('Include favourites or exclude them.')
+        //     .addChoices([
+        //         { name: 'Yes', value: 'yes'},
+        //         { name: 'No', value: 'no'},  
+        //     ])
+        //     .setRequired(false))
+        .addIntegerOption(minlevel =>
+            minlevel.setName('minlevel')
+            .setDescription('Card\'s Minimum Level.')
+            .setRequired(false))
+        .addIntegerOption(maxlevel =>
+            maxlevel.setName('maxlevel')
+            .setDescription('Card\'s Maximum Level.')
+            .setRequired(false)),
+    help: `Allows you to see all cards you own with the filters specified.`,
 	/**
 	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
 	 */
 	async execute(interaction) {
-        const cardName = interaction.options.getString('name');
-        const cards = await DbUserCards.findUserCardByName(interaction.user.id, cardName);
-        if(!cards || !cards.length) return interaction.editReply(`You have no cards of the name \`${cardName}\`.`);
+        const filters = {
+            name: interaction.options.getString('name'),
+            rarity: interaction.options.getString('rarity'),
+            type: interaction.options.getString('type'),
+            holo: interaction.options.getString('holo'),
+            minlevel: interaction.options.getInteger('minlevel'),
+            maxlevel: interaction.options.getInteger('maxlevel')
+        };
+
+        const cards = await DbUserCards.findFilteredUserCards(interaction.user.id, filters);
+        if(!cards || !cards.length) return interaction.editReply(`You have no cards with the applied filters.`);
 
         const collector = new CustomCollector(interaction, {}, async() => {});
-        collector.addSelectMenu(cards.map(card => ({ label: `${card.data.name} (${card.rarity})`, description: card.desc, value: card.index, cardToRender: card.data.image }) ), async(i) => {
+        collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, cardToRender: card.data.image }) ), async(i) => {
             const selectedCard = cards[parseInt(i.values[0])];
             if(!selectedCard.render) {
                 const render = new CardCanvas(interaction, selectedCard);

@@ -31,7 +31,7 @@ module.exports = {
         // Get cards and store to user
         const pack = await CardBuilder.openPack();
 
-        const renders = [];
+        const renders = ["https://cdn.discordapp.com/attachments/1155774786451017829/1369280687148105820/opening.gif?ex=68330483&is=6831b303&hm=b74dfbf9a1ef6e76819a77651caa11ec0683040f1eb925a3d635a87340566dda&"];
         const fullImages = [];
         for(const card of pack) {
             const newCard = await DbUserCards.giveUserCard(interaction.user.id, card);
@@ -43,7 +43,9 @@ module.exports = {
 
         const fullImage = new CardsView(interaction, fullImages);
         await fullImage.createCards();
-        renders.push(fullImage.getCards());
+        const canvas = fullImage.getCards();
+        canvas.msg = " ";
+        renders.push(canvas);
         await user.resetPackTimer();
 
         // Display to user

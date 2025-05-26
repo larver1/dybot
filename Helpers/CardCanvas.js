@@ -4,6 +4,12 @@ const { AttachmentBuilder } = require('discord.js');
 const assets = {};
 const cardData = JSON.parse(fs.readFileSync('./Objects/CardData.json'));
 
+const cardDimensions = {
+    scale: 0.50,
+    width: 768,
+    height: 1024
+};
+
 async function loadAssets(){
     // Load all card images
     for(const card of cardData) {
@@ -22,14 +28,18 @@ loadAssets();
 
 module.exports = class CardCanvas {
     constructor(interaction, card) {
-        this.scale = 0.25
-        this.width = 768;
-        this.height = 1024;
+        this.scale = cardDimensions.scale;
+        this.width = cardDimensions.width;
+        this.height = cardDimensions.height;
         this.card = card;
         this.cardObj = card.data;
         this.attachment;
         this.interaction = interaction;
         return;
+    }
+
+    static getCardDimensions() {
+        return cardDimensions;
     }
 
     async createCard(){
