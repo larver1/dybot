@@ -44,8 +44,8 @@ module.exports = class DbUserCards {
         const query = {user_id: id};
         if(filters.name) {
             const cardId = this.findCardByName(filters.name)?.id;
-            if(cardId) query.card_id = cardId;
-            else query.card_id = 99999; // Make invalid ID so that nothing shows
+            if(cardId) query.dex_id = cardId;
+            else query.dex_id = 99999; // Make invalid ID so that nothing shows
         } 
         if(filters.rarity) query.rarity = filters.rarity;
         if(filters.type) { 
@@ -60,6 +60,7 @@ module.exports = class DbUserCards {
         if(filters.minlevel || filters.maxlevel) query.lvl = {}
         if(filters.minlevel) query.lvl[Op.gte] = filters.minlevel;
         if(filters.maxlevel) query.lvl[Op.lte] = filters.maxlevel;
+        if(filters.favourited) query.fav = filters.favourited == 'yes' ? true : false;
 
         return UserCards.findAll({ where: query });
     }
@@ -82,6 +83,19 @@ module.exports = class DbUserCards {
             first_edition: true
         });
         return dbCard;
+    }
+
+    /**
+     * Adds card of ID to user
+     * @param {Number} userId - User's ID
+     * @param {Object} card - Card's details
+     */
+    static async updateUserCard(card, changes) {
+        
+        if(changes.fav) {
+            card.fav = changes.fav;
+        }
+        return card.save();
     }
 
 }

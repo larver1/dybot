@@ -22,6 +22,11 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.INTEGER,
 			allowNull: false,
 		},
+		// If the card is favourited
+		fav: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: 0
+		},
 		// Rarity of card
 		rarity: {
 			type: DataTypes.STRING,
@@ -70,6 +75,7 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.VIRTUAL,
 			get() {
 				msg = "";
+				if(this.fav) msg += `❤️ `;
 				if(this.first_edition) msg += `1️⃣`; 
 				if(this.gold) msg += `🪙`;
 				if(this.star) msg += `🌠`;

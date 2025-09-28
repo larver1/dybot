@@ -82,8 +82,9 @@ module.exports = class CustomCollector {
      * Adds a select menu from data passed in
      * @param {Array} data - Data passed in 
      * @param {Function} callbackFn - The function to call when an item is selected
+     * @param {Object} options - Options to customise select menu
      */
-    async addSelectMenu(data, callbackFn) {
+    async addSelectMenu(data, callbackFn, options) {
         let selectionList = [];
         selectionList[0] = [];
         let page = 0;
@@ -112,8 +113,9 @@ module.exports = class CustomCollector {
 
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(uuidv4())
-            .setPlaceholder(`[Page ${this.page + 1}/${this.maxPages}] Select an Option`)
+            .setPlaceholder(`[Page ${this.page + 1}/${this.maxPages}] Select`)
             .addOptions(selectionList[0])
+            .setMaxValues(options.pickAll ? selectionList[0].length : 1);
         selectMenu.selectionList = selectionList;
         selectMenu.callbackFn = callbackFn;
 
@@ -131,7 +133,8 @@ module.exports = class CustomCollector {
                     const selectMenuIndex = this.components.findIndex(component => component.customId == selectMenu.customId);
                     this.components[selectMenuIndex].components[0]
                         .setOptions(selectMenu.selectionList[this.page])
-                        .setPlaceholder(`[Page ${this.page + 1}/${this.maxPages}] Select an Option`);
+                        .setPlaceholder(`[Page ${this.page + 1}/${this.maxPages}] Select`)
+                        .setMaxValues(options.pickAll ? selectionList[this.page].length : 1);
 
                     this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));   
                 }, prevPageEmoji),
@@ -144,7 +147,8 @@ module.exports = class CustomCollector {
                     const selectMenuIndex = this.components.findIndex(component => component.customId == selectMenu.customId);
                     this.components[selectMenuIndex].components[0]
                         .setOptions(selectMenu.selectionList[this.page])
-                        .setPlaceholder(`[Page ${this.page + 1}/${this.maxPages}] Select an Option`);
+                        .setPlaceholder(`[Page ${this.page + 1}/${this.maxPages}] Select`)
+                        .setMaxValues(options.pickAll ? selectionList[this.page].length : 1);
 
                     this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));
                 }, nextPageEmoji)

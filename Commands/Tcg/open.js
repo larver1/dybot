@@ -31,7 +31,7 @@ module.exports = {
         // Get cards and store to user
         const pack = await CardBuilder.openPack();
 
-        const renders = ["https://cdn.discordapp.com/attachments/1155774786451017829/1369280687148105820/opening.gif?ex=68330483&is=6831b303&hm=b74dfbf9a1ef6e76819a77651caa11ec0683040f1eb925a3d635a87340566dda&"];
+        const renders = ["https://cdn.discordapp.com/attachments/1209523305975906304/1378406053946982527/opening.gif?ex=683c7c2c&is=683b2aac&hm=046f07fa1633ad32a8f651bafadc42664f9c297076672b6c66e0094d35e31b3d&"];
         const fullImages = [];
         for(const card of pack) {
             const newCard = await DbUserCards.giveUserCard(interaction.user.id, card);

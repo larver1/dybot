@@ -2,6 +2,8 @@ const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Strin
 const CustomCollector = require('../../Helpers/CustomCollector.js');
 const DbUserCards = require('../../Helpers/DbUserCards.js');
 const CardCanvas = require('../../Helpers/CardCanvas.js');
+const CustomEmbed = require('../../Helpers/CustomEmbed.js');
+const MessageHelper = require('../../Helpers/MessageHelper.js');
 
 /**
  * @param {SlashCommandBuilder} data - Command data.
@@ -11,8 +13,16 @@ const CardCanvas = require('../../Helpers/CardCanvas.js');
  */
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName('inspect')
-		.setDescription('Allows you to see all cards you own with the filters specified.')
+		.setName('favourite')
+		.setDescription('Favourite/unfavourite cards with the filters specified.')
+        .addStringOption(option =>
+            option.setName('option')
+            .setDescription('Choose whether to favourite or unfavourite.')
+            .addChoices(
+                { name: 'Favourite', value: 'favourite'},  
+                { name: 'Unfavourite', value: 'unfavourite'},  
+            )
+            .setRequired(true))
         .addStringOption(name =>
             name.setName('name')
             .setDescription('Character name.')
@@ -61,7 +71,7 @@ module.exports = {
             maxlevel.setName('maxlevel')
             .setDescription('Card\'s Maximum Level.')
             .setRequired(false)),
-    help: `Allows you to see all cards you own with the filters specified.`,
+    help: `Favourite/unfavourite cards with the filters specified. Favourited cards can't be: Sold, Sacrificed, Traded, or put in Giveaway.`,
 	/**
 	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
@@ -77,19 +87,24 @@ module.exports = {
             favourited: interaction.options.getString('favourited')
         };
 
+        const willFavourite = interaction.options.getString('option') === 'favourite';
+
         const cards = await DbUserCards.findFilteredUserCards(interaction.user.id, filters);
         if(!cards || !cards.length) return interaction.editReply(`You have no cards with the applied filters.`);
 
         const collector = new CustomCollector(interaction, {}, async() => {});
         collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, cardToRender: card.data.image }) ), async(i) => {
-            const selectedCard = cards[parseInt(i.values[0])];
-            if(!selectedCard.render) {
-                const render = new CardCanvas(interaction, selectedCard);
-                await render.createCard();
-                selectedCard.render = render.getCard();
+            const selectedCards = [];
+            i.values.map(index => selectedCards.push(cards[index]));
+            for(let card of selectedCards) {
+                card = await DbUserCards.updateUserCard(card, { fav: willFavourite });
             }
-            await interaction.editReply({ files: [selectedCard.render] }).catch(e => console.error(e));
-        }, {});
+            await interaction.editReply({ embeds: [
+                new CustomEmbed(interaction)
+                .setTitle(`The following cards have been ${willFavourite ? 'favourited' : 'unfavourited'}!`)
+                .setDescription(MessageHelper.displayCardList(selectedCards, `Favourited cards can't be: Sold, Sacrificed, Traded, or put in Giveaway.`))
+        ], components: []}).catch(e => console.error(e));
+        }, { pickAll: true });
         await collector.start();
     },
 }
