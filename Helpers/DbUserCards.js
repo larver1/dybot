@@ -85,6 +85,13 @@ module.exports = class DbUserCards {
         return dbCard;
     }
 
+    static async changeOwnerOfCards(cards, newId) {
+        for ( const card of cards ) {
+            card.user_id = newId;
+            await card.save();
+        }
+    }
+
     /**
      * Adds card of ID to user
      * @param {Number} userId - User's ID
