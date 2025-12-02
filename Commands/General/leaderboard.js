@@ -53,7 +53,7 @@ module.exports = {
             if(i < 10 && topUsers[i].leaderboard) {
                 const clientUser = await interaction.client.users.fetch(topUsers[i].user_id);
                 const bal = `💰${topUsers[i].getDataValue('balance')}`;
-                const shortenedTag = clientUser.tag.length > 18 ? `${clientUser.tag.slice(0, numChars - 3)}...` : clientUser.tag;
+                const shortenedTag = clientUser.tag.length > 18 ? `${clientUser.tag.slice(0, 15)}...` : clientUser.tag;
                 msg += `${inlineCode(`${i + 1}.${i < 9 ? ' ' : ''} ${shortenedTag}${MessageHelper.padString(shortenedTag, 18, true)}: ${bal}${MessageHelper.extraPadding(bal, 8)} DyDots`)}\n`;
             }
             if(topUsers[i].user_id == interaction.user.id) {
