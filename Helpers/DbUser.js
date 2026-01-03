@@ -24,7 +24,7 @@ module.exports = class DbUser {
     static async createUser(id, leaderboard) {
         const user = await Users.create({
             user_id: id,
-            balance: 0,
+            balance: 100,
             leaderboard: leaderboard
         });
         return user;

@@ -52,7 +52,7 @@ module.exports = {
      */
     async givePoints(interaction, user, amount, tag) {
         if(amount <= 0) return interaction.editReply(`You must input a number of 1 or higher`);
-        user.setDataValue('balance', user.getDataValue('balance') + amount)
+        user.setDataValue('balance', user.getDataValue('balance') + amount);
         await user.save();
         return interaction.editReply(`You have successfully given x${amount} 💰 to ${tag}`);
     }

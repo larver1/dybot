@@ -59,7 +59,7 @@ module.exports = {
 		// Build profile embed
 		const profileEmbed = new CustomEmbed(interaction)
 			.setTitle(`${interaction.user.tag}'s Profile!`)
-			.setDescription(`DyDots: ${user.balance}`)
+			.setDescription(`Level: ${user.level}\nDyDots: ${user.balance}${user.first_pack ? '\nFirst Pack: ' +  `<t:${(user.first_pack / 1000)}:f>` : '\n'}`)
 			.setThumbnail(interaction.user.displayAvatarURL())
 
 		// Build coupons embed
