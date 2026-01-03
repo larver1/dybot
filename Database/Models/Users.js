@@ -29,11 +29,19 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 			defaultValue: false,
 			allowNull: false
 		},
+		first_pack: {
+			type: DataTypes.DATE,
+			defaultValue: null
+		},
 		last_pack: {
 			type: DataTypes.DATE,
 			defaultValue: new Date("December 17, 1995 03:24:00"),
 			allowNull: false
 		},
+		level: {
+			type: DataTypes.INTEGER,
+			defaultValue: 1,
+		}
 	}, {
 		timestamps: true,
 	});

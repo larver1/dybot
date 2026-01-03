@@ -1,4 +1,4 @@
-const { UserCards } = require('../Database/Objects');
+const { UserCards, Users } = require('../Database/Objects');
 const fs = require('fs');
 const CardData = JSON.parse(fs.readFileSync('./Objects/CardData.json'));
 const { Op } = require("sequelize");
@@ -61,6 +61,7 @@ module.exports = class DbUserCards {
         if(filters.minlevel) query.lvl[Op.gte] = filters.minlevel;
         if(filters.maxlevel) query.lvl[Op.lte] = filters.maxlevel;
         if(filters.favourited) query.fav = filters.favourited == 'yes' ? true : false;
+        if(filters.tradebox) query.in_tradebox = filters.tradebox == 'yes' ? true : false;
 
         return UserCards.findAll({ where: query });
     }
@@ -82,6 +83,13 @@ module.exports = class DbUserCards {
             lvl: 1,
             first_edition: true
         });
+
+        const user = await Users.findOne({ where: { user_id: userId }, attributes: [ 'user_id', 'first_pack' ] });
+        if (!user.first_pack) {
+            user.first_pack = new Date();
+            await user.save();
+        }
+
         return dbCard;
     }
 
@@ -97,12 +105,9 @@ module.exports = class DbUserCards {
      * @param {Number} userId - User's ID
      * @param {Object} card - Card's details
      */
-    static async updateUserCard(card, changes) {
-        
-        if(changes.fav) {
-            card.fav = changes.fav;
-        }
+    static async updateUserCard(card, changes) {     
+        if(changes.fav) { card.fav = changes.fav; }
+        if(Object.hasOwn(changes, "tradebox")) { card.in_tradebox = changes.tradebox; }
         return card.save();
     }
-
 }

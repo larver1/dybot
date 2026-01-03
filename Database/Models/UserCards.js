@@ -56,6 +56,11 @@ module.exports = (sequelize, DataTypes) => {
 			type: DataTypes.BOOLEAN,
 			defaultValue: 0
 		},
+		// If in tradebox
+		in_tradebox: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: 0
+		},
 		// Name
 		name: {
 			type: DataTypes.STRING,
