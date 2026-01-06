@@ -19,6 +19,10 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 			defaultValue: 0,
 			allowNull: false,
 		},
+		archive: {
+			type: DataTypes.STRING,
+			default: ''
+		},
 		leaderboard: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: true,

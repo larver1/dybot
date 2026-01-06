@@ -74,14 +74,15 @@ module.exports = {
             holo: interaction.options.getString('holo'),
             minlevel: interaction.options.getInteger('minlevel'),
             maxlevel: interaction.options.getInteger('maxlevel'),
-            favourited: interaction.options.getString('favourited')
+            favourited: interaction.options.getString('favourited'),
+            tradebox: 'no'
         };
 
         const cards = await DbUserCards.findFilteredUserCards(interaction.user.id, filters);
         if(!cards || !cards.length) return interaction.editReply(`You have no cards with the applied filters.`);
 
         const collector = new CustomCollector(interaction, {}, async() => {});
-        collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, cardToRender: card.data.image }) ), async(i) => {
+        collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, emoji: card.emoji, cardToRender: card.data.image }) ), async(i) => {
             const selectedCard = cards[parseInt(i.values[0])];
             if(!selectedCard.render) {
                 const render = new CardCanvas(interaction, selectedCard);

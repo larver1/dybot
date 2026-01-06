@@ -68,11 +68,33 @@ module.exports = (sequelize, DataTypes) => {
 				return CardData[parseInt(this.dex_id) - 1].name;
 			}
 		},
+		// Emoji
+		emoji: {
+			type: DataTypes.STRING,
+			get() {
+				return CardData[parseInt(this.dex_id) - 1].emote;
+			}
+		},
 		// Card Data
 		data: {
 			type: DataTypes.JSON,
 			get() {
 				return CardData[parseInt(this.dex_id) - 1];
+			}
+		},
+		card_name: {
+			type: DataTypes.VIRTUAL,
+			get() {
+				let id = `${this.dex_id}${this.rarity[0]}`;
+
+				if(this.gold) id += "G";
+				else if(this.star) id += "S";
+				else id += "N";
+
+				id += this.holo ? "H" : "N";
+				id += this.first_edition ? "1" : "0";
+
+				return id;
 			}
 		},
 		// Description

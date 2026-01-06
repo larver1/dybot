@@ -93,7 +93,7 @@ module.exports = {
         if(!cards || !cards.length) return interaction.editReply(`You have no cards with the applied filters.`);
 
         const collector = new CustomCollector(interaction, {}, async() => {});
-        collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, cardToRender: card.data.image }) ), async(i) => {
+        collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, emoji: card.emoji, cardToRender: card.data.image }) ), async(i) => {
             const selectedCards = [];
             i.values.map(index => selectedCards.push(cards[index]));
             for(let card of selectedCards) {

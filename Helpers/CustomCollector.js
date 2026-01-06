@@ -105,6 +105,7 @@ module.exports = class CustomCollector {
 				label: data[i].label,
 				description: data[i].description,
 				value: data[i].value ? `${data[i].value}` : `${i}`,
+                emoji: data[i].emoji ? data[i].emoji : null
             });
         }
 
@@ -136,7 +137,7 @@ module.exports = class CustomCollector {
                         .setPlaceholder(`[Page ${this.page + 1}/${this.maxPages}] Select`)
                         .setMaxValues(options.pickAll ? selectionList[this.page].length : 1);
 
-                    this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));   
+                    this.message = await this.interaction.editReply({ content: options?.msg ?? `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));   
                 }, prevPageEmoji),
                 this.createButton('Next', ButtonStyle.Secondary, async() => {
                     // Update page number
@@ -150,7 +151,7 @@ module.exports = class CustomCollector {
                         .setPlaceholder(`[Page ${this.page + 1}/${this.maxPages}] Select`)
                         .setMaxValues(options.pickAll ? selectionList[this.page].length : 1);
 
-                    this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));
+                    this.message = await this.interaction.editReply({ content: options?.msg ?? `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));
                 }, nextPageEmoji)
             ]);
         }
@@ -276,15 +277,15 @@ module.exports = class CustomCollector {
      */
     checkFilter(i) {
         const idArray = Object.keys(this.parent.componentIds);
-        return i.user.id == this.parent.interaction.user.id && (idArray.includes(i.customId));
+        return ( i.user.id == ( this.options?.overrideId ?? this.parent.interaction.user.id ) ) && (idArray.includes(i.customId));
     }
 
     /**
      * Displays message and attaches collector to it
      */
-    async init() {
+    async init(msg) {
         this.initFilter();
-        this.message = await this.interaction.editReply({ content: ` `, embeds: this.embeds, files: this.images.length ? [this.images[0]] : [], components: this.components }).catch(e => console.error(e));   
+        this.message = await this.interaction.editReply({ content: msg ?? ` `, embeds: this.embeds, files: this.images.length ? [this.images[0]] : [], components: this.components }).catch(e => console.error(e));   
         this.collector = this.message.createMessageComponentCollector({ 
             filter: this.checkFilter, 
             time: this.options.time ? this.options.time : 300_000, 
@@ -297,9 +298,8 @@ module.exports = class CustomCollector {
     /**
      * Starts listening for interactions
      */
-    async start() {
-
-        await this.init();
+    async start(msg) {
+        await this.init(msg);
         this.collector.on('collect', async i => {
             await i.deferUpdate().catch(e => {console.error(e)});
             this.callbackFn(i);

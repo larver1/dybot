@@ -58,7 +58,7 @@ module.exports = {
             maxlevel.setName('maxlevel')
             .setDescription('Card\'s Maximum Level.')
             .setRequired(false)),
-    help: `Allows you to see all cards you own with the filters specified.`,
+    help: `Allows you to give away cards from your tradebox.`,
 	/**
 	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
@@ -71,6 +71,7 @@ module.exports = {
             holo: interaction.options.getString('holo'),
             minlevel: interaction.options.getInteger('minlevel'),
             maxlevel: interaction.options.getInteger('maxlevel'),
+            tradebox: 'yes'
         };
         
         // User can only giveaway once every 5 minutes, so store the time of their last GA in a collection
@@ -95,10 +96,10 @@ module.exports = {
         }
 
         const cards = await DbUserCards.findFilteredUserCards(interaction.user.id, {favourited: false, ...filters} );
-        if(!cards || !cards.length) return interaction.editReply(`You have no cards with the applied filters.`);
+        if(!cards || !cards.length) return interaction.editReply(`You have no cards in your \`/tradebox\` with the applied filters.`);
 
         const collector = new CustomCollector(interaction, {}, async() => {});
-        collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, cardToRender: card.data.image }) ), async(i) => {
+        collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, emoji: card.emoji, cardToRender: card.data.image }) ), async(i) => {
             const selectedCards = [];
             const now = new Date();
             const halfMinuteFromNow = now.setSeconds(now.getSeconds() + 30);

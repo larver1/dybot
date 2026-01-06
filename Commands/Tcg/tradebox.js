@@ -1,5 +1,7 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputStyle, TextInputBuilder } = require('discord.js');
 const CustomCollector = require('../../Helpers/CustomCollector.js');
+const CustomEmbed = require('../../Helpers/CustomEmbed.js');
+const MessageHelper = require('../../Helpers/MessageHelper.js');
 const DbUserCards = require('../../Helpers/DbUserCards.js');
 const CardCanvas = require('../../Helpers/CardCanvas.js');
 
@@ -93,12 +95,16 @@ module.exports = {
         if(!cards || !cards.length) return interaction.editReply(`You have no cards with the applied filters.`);
 
         const collector = new CustomCollector(interaction, {}, async() => {});
-        collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, cardToRender: card.data.image }) ), async(i) => {
+        collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, emoji: card.emoji, cardToRender: card.data.image }) ), async(i) => {
             const selectedCards = cards.filter( (card, cardIndex) => i.values.includes(cardIndex.toString()));
             for (const card of selectedCards) {
                 await DbUserCards.updateUserCard(card, { tradebox: subCommand == "add" ? true : false } );
             }
-            await interaction.editReply( { content: `The following cards have been ${subCommand == 'remove' ? 'removed from' : 'added to' } the trade box.`, components: [] }).catch(e => console.error(e));
+
+            let tradeboxComplete = new CustomEmbed(interaction)
+            .setTitle(`Tradebox`)
+            .setDescription(`The following cards have been ${subCommand == 'remove' ? 'removed from' : 'added to' } the trade box.\n${MessageHelper.displayCardList(selectedCards, '')}`)
+            await interaction.editReply( { embeds: [tradeboxComplete], components: [] }).catch(e => console.error(e));
         }, { pickAll: true } );
         await collector.start();
     },

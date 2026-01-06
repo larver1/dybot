@@ -38,6 +38,10 @@ module.exports = class CardCanvas {
         return;
     }
 
+    static getAssets() {
+        return assets;
+    }
+
     static getCardDimensions() {
         return cardDimensions;
     }

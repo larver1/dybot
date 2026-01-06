@@ -281,13 +281,18 @@ module.exports = class MessageHelper {
 		return viewOrderEmbed;
 	}
 
+	static displayArchiveCard(name, emoji, rarity, gold, star, holo, first, owned) {
+		const msg = `${owned ? '✅' : '❌'}${name} (${rarity})`;
+		return `${emoji} \`${msg}${MessageHelper.padString(msg, 20)} ${first ? '1️⃣' : ''}${gold ? '🪙' : ''}${star ? '🌠' : ''}${holo ? '🌈' : ''}\``;
+	}
+
 	static displayCardList(cards, infoText) {
         let msg = `${infoText}\n\n`;
 		for(let i = 0; i < cards.length; i++) {
 			const card = cards[i];
 			const details = `${card.name} (${card.rarity})`;
 			const lvl = `lvl.${card.lvl}`;
-			msg += `${inlineCode(`${i + 1}.${i < 9 ? ' ' : ''} ${details}${MessageHelper.padString(details, 30, true)}: ${lvl}${MessageHelper.extraPadding(lvl, 8)}`)} ${card.desc}\n`;
+			msg += `${card.emoji} ${inlineCode(`${i + 1}.${i < 9 ? ' ' : ''} ${details}${MessageHelper.padString(details, 30, true)}: ${lvl}${MessageHelper.extraPadding(lvl, 8)}`)} ${card.desc}\n`;
 		}
 
         return msg;
