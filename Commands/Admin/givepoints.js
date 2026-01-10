@@ -33,7 +33,7 @@ module.exports = {
 	async execute(interaction) {
 
         if(interaction.client.config.adminId != interaction.user.id)
-            return interaction.editReply({ content: `You do not have permission to use this command.` }).catch(e => console.log(e));
+            return interaction.editReply({ content: `You do not have permission to use this command.` }).catch(e => console.error(e));
 
         const amount = interaction.options.getInteger('amount');
         const mentioned = interaction.options.getUser('user');
@@ -52,7 +52,7 @@ module.exports = {
      */
     async givePoints(interaction, user, amount, tag) {
         if(amount <= 0) return interaction.editReply(`You must input a number of 1 or higher`);
-        user.setDataValue('balance', user.getDataValue('balance') + amount)
+        user.setDataValue('balance', user.getDataValue('balance') + amount);
         await user.save();
         return interaction.editReply(`You have successfully given x${amount} 💰 to ${tag}`);
     }

@@ -50,7 +50,7 @@ manager.on('clusterCreate', async cluster => {
 // Spawn clients with specified options
 async function start() {
 	await unpauseUsers();
-	await manager.spawn({ delay: 7000, timeout: 60000 }).catch(e => console.log(e));   
+	await manager.spawn({ delay: 7000, timeout: 60000 }).catch(e => console.error(e));   
 }
 
 async function unpauseUsers() {

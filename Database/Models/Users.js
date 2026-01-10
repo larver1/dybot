@@ -19,6 +19,10 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 			defaultValue: 0,
 			allowNull: false,
 		},
+		archive: {
+			type: DataTypes.STRING,
+			default: ''
+		},
 		leaderboard: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: true,
@@ -28,7 +32,20 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 			type: DataTypes.INTEGER,
 			defaultValue: false,
 			allowNull: false
-		}	
+		},
+		first_pack: {
+			type: DataTypes.DATE,
+			defaultValue: null
+		},
+		last_pack: {
+			type: DataTypes.DATE,
+			defaultValue: new Date("December 17, 1995 03:24:00"),
+			allowNull: false
+		},
+		level: {
+			type: DataTypes.INTEGER,
+			defaultValue: 1,
+		}
 	}, {
 		timestamps: true,
 	});
@@ -212,6 +229,27 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 		userCoupon.coupon = coupon;
 		return userCoupon;
 	};
+
+	/**
+	 * Checks if user can open a pack
+	 */
+	Users.prototype.canOpenPack = function() {
+        if(!this.last_pack) return true;
+        const now = new Date();
+        const timeDifference = now.getTime() - this.last_pack.getTime();
+        const numHoursInMilliseconds = 6 * 60 * 60 * 1000; 
+        return timeDifference >= numHoursInMilliseconds;
+	};
+
+	/**
+	 * Checks if user can open a pack
+	 */
+	Users.prototype.resetPackTimer = async function() {
+		const now = new Date();
+		this.last_pack = now;
+		await this.save();
+	};
+	
 
 	return Users;
 }

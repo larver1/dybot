@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const CustomEmbed = require('../Helpers/CustomEmbed.js');
 const DbOrder = require('../Helpers/DbOrder.js');
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, inlineCode } = require('discord.js');
 const tickEmoji = "<a:tick:886245262169866260>";
 const crossEmoji = "<a:cross:886245292339515412>";
 const fs = require('fs');
@@ -85,15 +85,15 @@ module.exports = class MessageHelper {
 		const components = [row];
 		
 		let interactionReply;
-		if(editMsg) interactionReply = await editMsg.edit({ content: content, embeds: embeds, components: components }).catch(e => console.log(e));
-		else interactionReply = await interaction.editReply({ content: content, embeds: embeds, components: components }).catch(e => console.log(e));
+		if(editMsg) interactionReply = await editMsg.edit({ content: content, embeds: embeds, components: components }).catch(e => console.error(e));
+		else interactionReply = await interaction.editReply({ content: content, embeds: embeds, components: components }).catch(e => console.error(e));
 
 		const filter = i => (i.user.id === interaction.user.id) && (i.customId == acceptId || i.customId == declineId);
 		const collector = await interactionReply.createMessageComponentCollector({ filter, time: 60000, errors: ['time'], max: noDefer ? 999 : 1 });
         
 		// Emit events when either confirm or decline button is pressed
 		collector.on('collect', async i => {
-            if(!noDefer) await i.deferUpdate().catch(e => {console.log(e)});
+            if(!noDefer) await i.deferUpdate().catch(e => {console.error(e)});
 			if(i.customId == acceptId)
 				collector.emit('confirmed', i);
             else if(i.customId == declineId)
@@ -280,6 +280,23 @@ module.exports = class MessageHelper {
 	
 		return viewOrderEmbed;
 	}
+
+	static displayArchiveCard(name, emoji, rarity, gold, star, holo, first, owned) {
+		const msg = `${owned ? '✅' : '❌'}${name} (${rarity})`;
+		return `${emoji} \`${msg}${MessageHelper.padString(msg, 20)} ${first ? '1️⃣' : ''}${gold ? '🪙' : ''}${star ? '🌠' : ''}${holo ? '🌈' : ''}\``;
+	}
+
+	static displayCardList(cards, infoText) {
+        let msg = `${infoText}\n\n`;
+		for(let i = 0; i < cards.length; i++) {
+			const card = cards[i];
+			const details = `${card.name} (${card.rarity})`;
+			const lvl = `lvl.${card.lvl}`;
+			msg += `${card.emoji} ${inlineCode(`${i + 1}.${i < 9 ? ' ' : ''} ${details}${MessageHelper.padString(details, 30, true)}: ${lvl}${MessageHelper.extraPadding(lvl, 8)}`)} ${card.desc}\n`;
+		}
+
+        return msg;
+    };
 
 	/**
      * Helper function to align each item evenly on the screen so that they have the same number of characters

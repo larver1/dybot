@@ -54,7 +54,7 @@ module.exports = {
                 .setTitle('Welcome to DyBot!')
                 .setDescription(msg)
             ]
-        }).catch(e => { console.log(e)});
+        }).catch(e => { console.error(e)});
 	},
 	/**
 	 * Displays info regarding a specific command
@@ -65,6 +65,6 @@ module.exports = {
         const command = interaction.client.commands.get(commandName.toLowerCase());
 		
 
-		return interaction.editReply({ content: `## \`/${command.data.name}\`\n${command.help}` }).catch(e => console.log(e));
+		return interaction.editReply({ content: `## \`/${command.data.name}\`\n${command.help}` }).catch(e => console.error(e));
 	}
 }

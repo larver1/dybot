@@ -44,6 +44,7 @@ require('../Database/Models/Orders.js')(sequelize, Sequelize.DataTypes);
 require('../Database/Models/OrderItems.js')(sequelize, Sequelize.DataTypes);
 require('../Database/Models/UserCoupons.js')(sequelize, Sequelize.DataTypes);
 require('../Database/Models/Users.js')(sequelize, Sequelize.DataTypes);
+require('../Database/Models/UserCards.js')(sequelize, Sequelize.DataTypes);
 
 const force = false;
 

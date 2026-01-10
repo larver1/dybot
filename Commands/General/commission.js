@@ -82,12 +82,12 @@ module.exports = {
                 .setEmoji('<:rightarrow:709828406048587806>')
                 .setStyle(ButtonStyle.Secondary))
 
-        const interactionReply = await interaction.editReply({ embeds: [emotesEmbed], components: [nextPage] }).catch(e => console.log(e));
+        const interactionReply = await interaction.editReply({ embeds: [emotesEmbed], components: [nextPage] }).catch(e => console.error(e));
 
         const filter = i => i.user.id === interaction.user.id && (i.customId == prevPageId || i.customId == nextPageId);
         const collector = interactionReply.createMessageComponentCollector({ filter, time: 300_000, errors: ['time'] });
         collector.on('collect', async i => { 
-			await i.deferUpdate().catch(e => {console.log(e)});
+			await i.deferUpdate().catch(e => {console.error(e)});
 
 			if(i.customId == prevPageId) {
 				if(page == 0) page = maxPages;
@@ -105,12 +105,12 @@ module.exports = {
             emotesEmbed.setDescription(msg);
             emotesEmbed.setImage(currentOrderType.image);
 
-            await interaction.editReply({ embeds: [emotesEmbed], components: [nextPage] }).catch(e => console.log(e));
+            await interaction.editReply({ embeds: [emotesEmbed], components: [nextPage] }).catch(e => console.error(e));
         });
 
         collector.on('end', async collected => {
 			if(collected.size <= 0) {
-				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.error(e));	
 			}
         });
     },
@@ -140,7 +140,7 @@ module.exports = {
 
         const toggleData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         if(!toggleData.orders) {
-            return interaction.editReply({ content: 'Placing orders is currently unavailable. Please try again another time. '}).catch(e => console.log(e));
+            return interaction.editReply({ content: 'Placing orders is currently unavailable. Please try again another time. '}).catch(e => console.error(e));
         }
         
         await user.pause();
@@ -185,18 +185,18 @@ module.exports = {
         const components = [addItemButton, orderOptions];
         const orderItems = [];
 
-        const interactionReply = await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.log(e));
+        const interactionReply = await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.error(e));
         const filter = i => i.user.id === interaction.user.id && (i.customId == addId || i.customId == confirmId || i.customId == cancelId || i.customId == specialId);
         const collector = interactionReply.createMessageComponentCollector({ filter, time: 300_000, errors: ['time'] });
         collector.on('collect', async i => { 
-            await i.deferUpdate().catch(e => {console.log(e)});
+            await i.deferUpdate().catch(e => {console.error(e)});
             if(i.customId == cancelId) {
                 collector.stop();
                 user.unpause();
-                return interaction.editReply({ content: `The order has been cancelled.`, components: [] }).catch(e => console.log(e));
+                return interaction.editReply({ content: `The order has been cancelled.`, components: [] }).catch(e => console.error(e));
             } else if(i.customId == confirmId) {
                 if(!orderItems.length) {
-                    return interaction.editReply({ content: `${interaction.user}, you must add at least one item before confirming an order` }).catch(e => console.log(e));
+                    return interaction.editReply({ content: `${interaction.user}, you must add at least one item before confirming an order` }).catch(e => console.error(e));
                 } else {
                     collector.stop();
                     const availableCoupons = await user.getCouponsOfValue(totalCost);
@@ -207,7 +207,7 @@ module.exports = {
             } else if(i.customId == addId || i.customId == specialId) {
                 // Disable buttons
                 MessageHelper.activateButtons(components, false);
-                await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.log(e));            
+                await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.error(e));            
             
                 // Follow up message
                 if(i.customId == addId) await this.addItem(interaction, components, collector, orderItems);
@@ -228,13 +228,13 @@ module.exports = {
             if(item.special && !specialMsg.length) specialMsg = ` + Special Item Cost`;
 
             embeds[0].setDescription(`Please add items to your order. Once you are finished, hit "confirm".\n${orderItemsMsg}\n\n__**Total Base Cost: ${totalCost.toFixed(2)}€${specialMsg}**__`);
-            await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.log(e));
+            await interaction.editReply({ embeds: embeds, components: components }).catch(e => console.error(e));
         });
 
         collector.on('end', async collected => {
 			if(collected.size <= 0) {
                 if(user) user.unpause();
-				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.error(e));	
 			}
         });
     },
@@ -280,14 +280,14 @@ module.exports = {
         )
 
         const components = [orderTypeSelectMenu, orderOptions];
-        const interactionReply = await interaction.followUp({ content: `Please select an order type. The price of this will be agreed upon contract creation.`, components: components }).catch(e => console.log(e));
+        const interactionReply = await interaction.followUp({ content: `Please select an order type. The price of this will be agreed upon contract creation.`, components: components }).catch(e => console.error(e));
         
         const filter = i => i.user.id === interaction.user.id && (i.customId == orderTypeId || i.customId == confirmId || i.customId == cancelId);
         const collector = interactionReply.createMessageComponentCollector({ filter, time: 300_000, errors: ['time'] });
         
         let currentOrderType;
         collector.on('collect', async i => { 
-            await i.deferUpdate().catch(e => {console.log(e)});
+            await i.deferUpdate().catch(e => {console.error(e)});
 
             if(i.customId == orderTypeId) {
                 currentOrderType = i.values[0];
@@ -295,7 +295,7 @@ module.exports = {
             else if(i.customId == confirmId) {
                 // If confirming, add item to list
                 if(!currentOrderType) {
-                    return interactionReply.edit({ content: `You must select an order type and order amount before confirming. `}).catch(e => console.log(e));
+                    return interactionReply.edit({ content: `You must select an order type and order amount before confirming. `}).catch(e => console.error(e));
                 } else {
                     const numExpress = await DbOrder.getNumExpressSlotsAvailable();
                     let numExpressOrdered = 0; 
@@ -319,13 +319,13 @@ module.exports = {
         collector.on('finish', async () => {
             // Delete message and reactivate order buttons
             MessageHelper.activateButtons(orderMessageComponents, true);
-            await interactionReply.delete().catch(e => console.log(e));
-            await interaction.editReply({ components: orderMessageComponents }).catch(e => console.log(e));
+            await interactionReply.delete().catch(e => console.error(e));
+            await interaction.editReply({ components: orderMessageComponents }).catch(e => console.error(e));
         });
 
         collector.on('end', async collected => {
 			if(collected.size <= 0) {
-				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.error(e));	
 			}
         });
     },
@@ -386,7 +386,7 @@ module.exports = {
         )
 
         const components = [orderTypeSelectMenu, orderAmountSelectMenu, orderOptions];
-        const interactionReply = await interaction.followUp({ content: `Please select an order type and order size`, components: components }).catch(e => console.log(e));
+        const interactionReply = await interaction.followUp({ content: `Please select an order type and order size`, components: components }).catch(e => console.error(e));
         
         const filter = i => i.user.id === interaction.user.id && (i.customId == orderTypeId || i.customId == orderAmountId || i.customId == confirmId || i.customId == cancelId);
         const collector = interactionReply.createMessageComponentCollector({ filter, time: 300_000, errors: ['time'] });
@@ -394,7 +394,7 @@ module.exports = {
         let currentOrderType, currentOrderAmount;
         
         collector.on('collect', async i => { 
-            await i.deferUpdate().catch(e => {console.log(e)});
+            await i.deferUpdate().catch(e => {console.error(e)});
 
             if(i.customId == orderTypeId) {
                 currentOrderType = i.values[0];
@@ -405,7 +405,7 @@ module.exports = {
             else if(i.customId == confirmId) {
                 // If confirming, add item to list
                 if(!currentOrderType || !currentOrderAmount) {
-                    return interactionReply.edit({ content: `You must select an order type and order amount before confirming. `}).catch(e => console.log(e));
+                    return interactionReply.edit({ content: `You must select an order type and order amount before confirming. `}).catch(e => console.error(e));
                 } else {
                     const numExpress = await DbOrder.getNumExpressSlotsAvailable();
                     let numExpressOrdered = 0; 
@@ -429,13 +429,13 @@ module.exports = {
         collector.on('finish', async () => {
             // Delete message and reactivate order buttons
             MessageHelper.activateButtons(orderMessageComponents, true);
-            await interactionReply.delete().catch(e => console.log(e));
-            await interaction.editReply({ components: orderMessageComponents }).catch(e => console.log(e));
+            await interactionReply.delete().catch(e => console.error(e));
+            await interaction.editReply({ components: orderMessageComponents }).catch(e => console.error(e));
         });
 
         collector.on('end', async collected => {
 			if(collected.size <= 0) {
-				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.error(e));	
 			}
         });
     },
@@ -488,16 +488,16 @@ module.exports = {
                 const amount = parseInt(modalInteraction.fields.getTextInputValue(amountId).replaceAll(",", ""));
                 if(isNaN(amount)) {
                     user.unpause();
-                    return interaction.followUp({ content: "You must input a whole number." }).catch(e => console.log(e));
+                    return interaction.followUp({ content: "You must input a whole number." }).catch(e => console.error(e));
                 } else if(amount < 0 || amount > maxExpress) {
                     user.unpause();
-                    return interaction.followUp({ content: `You must input a number between 1-${maxExpress}.` }).catch(e => console.log(e));
+                    return interaction.followUp({ content: `You must input a number between 1-${maxExpress}.` }).catch(e => console.error(e));
                 }
 
                 orderCollector.emit('addItem', { type: orderType, size: orderSize, express: amount });
                 itemCollector.emit('finish');
             }).catch(async e => {
-                console.log(e);
+                console.error(e);
                 return;
             });
         });
@@ -510,7 +510,7 @@ module.exports = {
         warnCollector.on('end', async collected => {
 			if(collected.size <= 0) {
                 user.unpause();
-				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.error(e));	
 			}
         });
     },
@@ -545,12 +545,12 @@ module.exports = {
                 .setEmoji(crossEmoji)
                 .setStyle(ButtonStyle.Danger))
 
-        const interactionReply = await interaction.editReply({ embeds: [couponEmbed], components: [selectList, cancelButton] }).catch(e => console.log(e));
+        const interactionReply = await interaction.editReply({ embeds: [couponEmbed], components: [selectList, cancelButton] }).catch(e => console.error(e));
         const filter = i => (i.user.id === interaction.user.id) && (i.customId == selectId || i.customId == cancelId);
         const collector = await interactionReply.createMessageComponentCollector({ filter, time: 60000, errors: ['time'], max: 1 });    
         
         collector.on('collect', async i => {
-            await i.deferUpdate().catch(e => {console.log(e)});
+            await i.deferUpdate().catch(e => {console.error(e)});
             if(i.customId == selectId) selectedCoupon = availableCoupons[parseInt(i.values)];
             await this.confirmOrder(interaction, user, orderItems, selectedCoupon);    
         });
@@ -558,7 +558,7 @@ module.exports = {
         collector.on('end', async collected => {
 			if(collected.size <= 0) {
                 if(user) user.unpause();
-				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.error(e));	
 			}
         });
     },
@@ -582,29 +582,29 @@ module.exports = {
 
             // Don't let user order something if capacity has changed since starting the order
             if(numExpressOrdered > numExpressAvailable) {
-                return interaction.editReply({ content: `Sorry, it appears that one or more express slots have been taken since starting your order. Please redo your order.` }).catch(e => console.log(e));
+                return interaction.editReply({ content: `Sorry, it appears that one or more express slots have been taken since starting your order. Please redo your order.` }).catch(e => console.error(e));
             }
             if(await DbOrder.getNumOrdersInProgress() >= 10) {
                 user.unpause();
-                return interaction.editReply({ content: `Sorry, it appears that all order slots have filled up since starting your order. Please check \`/commissions\` routinely and wait for enough spots to open before trying to order again.` }).catch(e => console.log(e));
+                return interaction.editReply({ content: `Sorry, it appears that all order slots have filled up since starting your order. Please check \`/commissions\` routinely and wait for enough spots to open before trying to order again.` }).catch(e => console.error(e));
             }
 
             const order = await DbOrder.createOrder(user, orderItems, coupon ? coupon.coupon : null);
             order.items = await order.getItems();
             const receiptEmbed = await MessageHelper.sendOrderDM(interaction, order);
             user.unpause();
-            await interaction.editReply({ content: `Your order has been created successfully, you will receive a DM with the receipt. Dyron has also been notified of the order and will be in touch shortly.`, embeds: [receiptEmbed], components: [] }).catch(e => console.log(e));
+            await interaction.editReply({ content: `Your order has been created successfully, you will receive a DM with the receipt. Dyron has also been notified of the order and will be in touch shortly.`, embeds: [receiptEmbed], components: [] }).catch(e => console.error(e));
         });
 
         warnCollector.on('declined', async i => {
             user.unpause();
-            return interaction.editReply({ content: `The order has been cancelled.`, embeds: [], components: [] }).catch(e => console.log(e));
+            return interaction.editReply({ content: `The order has been cancelled.`, embeds: [], components: [] }).catch(e => console.error(e));
         });
 
         warnCollector.on('end', async collected => {
 			if(collected.size <= 0) {
                 if(user) user.unpause();
-				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.error(e));	
 			}
         });
     },
@@ -679,17 +679,17 @@ module.exports = {
             )
 
         if(!orders || !orders.length)
-            return interaction.editReply({ content: `There are no orders to view.`, embeds: [], components: [] }).catch(e => console.log(e));
+            return interaction.editReply({ content: `There are no orders to view.`, embeds: [], components: [] }).catch(e => console.error(e));
 
         const components = [];
         components.push(orderTypeSelectMenu, nextPage);
 
-        const interactionReply = await interaction.editReply({ embeds: [], components: components }).catch(e => console.log(e));
+        const interactionReply = await interaction.editReply({ embeds: [], components: components }).catch(e => console.error(e));
         const filter = i => i.user.id === interaction.user.id && (i.customId == prevPageId || i.customId == nextPageId || i.customId == selectId || i.customId == progressId || i.customId == cancelId);
         const collector = interactionReply.createMessageComponentCollector({ filter, time: 300_000, errors: ['time'] });
 
         collector.on('collect', async i => { 
-            await i.deferUpdate().catch(e => {console.log(e)});
+            await i.deferUpdate().catch(e => {console.error(e)});
 			if(i.customId == prevPageId) {
 				if(page == 0) page = maxPages;
 				else page--;
@@ -718,7 +718,7 @@ module.exports = {
                         components.push(progressButton);
                     } 
                     components.push(cancelButton);
-                    await interaction.editReply({ content: ` `, embeds: embeds, components: components }).catch(e => console.log(e));
+                    await interaction.editReply({ content: ` `, embeds: embeds, components: components }).catch(e => console.error(e));
                     return;
                 });
                 return;
@@ -741,12 +741,12 @@ module.exports = {
                         components.push(progressButton);
                     } 
                     components.push(cancelButton);
-                    await interaction.editReply({ content: ` `, embeds: embeds, components: components }).catch(e => console.log(e));
+                    await interaction.editReply({ content: ` `, embeds: embeds, components: components }).catch(e => console.error(e));
                     return;
                 });
                 warnCollector.on('end', async collected => {
                     if(collected.size <= 0) {
-                        return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+                        return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.error(e));	
                     }
                 });
                 return;
@@ -772,13 +772,13 @@ module.exports = {
             } 
             components.push(cancelButton);
 
-            await interaction.editReply({ content: ` `, embeds: embeds, components: components }).catch(e => console.log(e));
+            await interaction.editReply({ content: ` `, embeds: embeds, components: components }).catch(e => console.error(e));
     
         });
 
         collector.on('end', async collected => {
 			if(collected.size <= 0) {
-				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+				return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.error(e));	
 			}
         });
     },
@@ -793,7 +793,7 @@ module.exports = {
         await order.save();
 
         await MessageHelper.sendOrderDM(interaction, order, order.status);
-        await interaction.editReply({ content: `Order #${order.order_id} has been updated.` }).catch(e => console.log(e));
+        await interaction.editReply({ content: `Order #${order.order_id} has been updated.` }).catch(e => console.error(e));
     },
     /**
      * Cancels an order
@@ -803,6 +803,6 @@ module.exports = {
     async cancelOrder(interaction, order) {
         await DbOrder.cancelOrder(order);
         await MessageHelper.sendOrderDM(interaction, order, 'cancelled');
-        await interaction.editReply({ content: `Order #${order.order_id} has been cancelled.` }).catch(e => console.log(e));
+        await interaction.editReply({ content: `Order #${order.order_id} has been cancelled.` }).catch(e => console.error(e));
     }
 }
