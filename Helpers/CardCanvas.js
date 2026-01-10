@@ -5,7 +5,7 @@ const assets = {};
 const cardData = JSON.parse(fs.readFileSync('./Objects/CardData.json'));
 
 const cardDimensions = {
-    scale: 0.50,
+    scale: 1,
     width: 768,
     height: 1024
 };
@@ -18,7 +18,9 @@ async function loadAssets(){
         for(const file of dir) {
             if(file.length != 12) throw Error('File name is not in correct format.');
             const cardName = file.replace(card.id, "");
-            assets[card.id][cardName] = await Canvas.loadImage(`./Assets/Cards/${card.id}/${file}`);
+            const cardId = cardName.replace(".png", "");
+            const fullId = `${cardId.toUpperCase()}.png`;
+            assets[card.id][fullId] = await Canvas.loadImage(`./Assets/Cards/${card.id}/${file}`);
         }
         console.log("finished loading cards assets.");
     }
