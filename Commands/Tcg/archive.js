@@ -7,9 +7,9 @@ const CardCanvas = require('../../Helpers/CardCanvas.js');
 const fs = require('fs');
 const CardData = JSON.parse(fs.readFileSync('./Objects/CardData.json'));
 const rarities = ["Common", "Uncommon", "Rare", "Legendary", "Mythical"];
-const types = ["G", "S", "N"];
-const holos = ["H", "N"];
-const firstEditions = ["1", "0"];
+const types = ["N", "G", "S", ];
+const holos = ["N", "H"];
+const firstEditions = ["0", "1"];
 
 
 /**
@@ -58,7 +58,7 @@ module.exports = {
                 { name: 'No', value: '0'},  
             )
             .setRequired(false)),
-    help: `Allows you to see all cards you own with the filters specified.`,
+    help: `The Archive shows a catalogue of all available cards. It also highlights which cards you have already discovered. With the additional parameters you can narrow down your search to specific types of cards. Undiscovered cards show up with a ❌, discovered ones show up with ✅.`,
 	/**
 	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
@@ -112,20 +112,5 @@ module.exports = {
         const collector = new CustomCollector(interaction, {}, async() => {});
         collector.addEmbedPages('Your Archive', selectionList);
         await collector.start();
-
-        // const cards = await DbUserCards.findFilteredUserCards(interaction.user.id, filters);
-        // if(!cards || !cards.length) return interaction.editReply(`You have no cards with the applied filters.`);
-
-        // const collector = new CustomCollector(interaction, {}, async() => {});
-        // collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, emoji: card.emoji, cardToRender: card.data.image }) ), async(i) => {
-        //     const selectedCard = cards[parseInt(i.values[0])];
-        //     if(!selectedCard.render) {
-        //         const render = new CardCanvas(interaction, selectedCard);
-        //         await render.createCard();
-        //         selectedCard.render = render.getCard();
-        //     }
-        //     await interaction.editReply({ files: [selectedCard.render] }).catch(e => console.error(e));
-        // }, {});
-        // await collector.start();
     }
 }

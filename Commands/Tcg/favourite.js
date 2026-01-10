@@ -4,6 +4,7 @@ const DbUserCards = require('../../Helpers/DbUserCards.js');
 const CardCanvas = require('../../Helpers/CardCanvas.js');
 const CustomEmbed = require('../../Helpers/CustomEmbed.js');
 const MessageHelper = require('../../Helpers/MessageHelper.js');
+const DbUser = require('../../Helpers/DbUser.js');
 
 /**
  * @param {SlashCommandBuilder} data - Command data.
@@ -55,14 +56,6 @@ module.exports = {
                 { name: 'No', value: 'no'},  
             )
             .setRequired(false))
-        .addStringOption(favourited =>
-            favourited.setName('favourited')
-            .setDescription('Include favourites or exclude them.')
-            .addChoices(
-                { name: 'Yes', value: 'yes'},
-                { name: 'No', value: 'no'},  
-            )
-            .setRequired(false))
         .addIntegerOption(minlevel =>
             minlevel.setName('minlevel')
             .setDescription('Card\'s Minimum Level.')
@@ -71,12 +64,13 @@ module.exports = {
             maxlevel.setName('maxlevel')
             .setDescription('Card\'s Maximum Level.')
             .setRequired(false)),
-    help: `Favourite/unfavourite cards with the filters specified. Favourited cards can't be: Sold, Sacrificed, Traded, or put in Giveaway.`,
+    help: `Favourite/unfavourite cards with the filters specified. Favourited cards can't be: Sold, Sacrificed, or put in the Tradebox.`,
 	/**
 	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
 	 */
 	async execute(interaction) {
+        const willFavourite = interaction.options.getString('option') === 'favourite';
         const filters = {
             name: interaction.options.getString('name'),
             rarity: interaction.options.getString('rarity'),
@@ -84,13 +78,16 @@ module.exports = {
             holo: interaction.options.getString('holo'),
             minlevel: interaction.options.getInteger('minlevel'),
             maxlevel: interaction.options.getInteger('maxlevel'),
-            favourited: interaction.options.getString('favourited')
+            favourited: willFavourite ? 'no' : 'yes'
         };
 
-        const willFavourite = interaction.options.getString('option') === 'favourite';
+        await DbUser.pauseUser(interaction.user.id);
 
         const cards = await DbUserCards.findFilteredUserCards(interaction.user.id, filters);
-        if(!cards || !cards.length) return interaction.editReply(`You have no cards with the applied filters.`);
+        if(!cards || !cards.length) {
+            await DbUser.unpauseUser(interaction.user.id);
+            return interaction.editReply(`You have no cards with the applied filters.`);
+        }
 
         const collector = new CustomCollector(interaction, {}, async() => {});
         collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, emoji: card.emoji, cardToRender: card.data.image }) ), async(i) => {
@@ -104,7 +101,9 @@ module.exports = {
                 .setTitle(`The following cards have been ${willFavourite ? 'favourited' : 'unfavourited'}!`)
                 .setDescription(MessageHelper.displayCardList(selectedCards, `Favourited cards can't be: Sold, Sacrificed, Traded, or put in Giveaway.`))
         ], components: []}).catch(e => console.error(e));
+            await DbUser.unpauseUser(interaction.user.id);
         }, { pickAll: true });
+        collector.addCancelButton(interaction.user.id);
         await collector.start();
     },
 }

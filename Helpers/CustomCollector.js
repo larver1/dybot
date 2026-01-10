@@ -5,7 +5,7 @@ const tickEmoji = "<a:tick:886245262169866260>";
 const crossEmoji = "<a:cross:886245292339515412>";
 const prevPageEmoji = "<:leftarrow:709828405952249946>";
 const nextPageEmoji = "<:rightarrow:709828406048587806>";
-const fs = require('fs');
+const DbUser = require('./DbUser.js');
 
 /**
  * A class to help with defining collectors to reduce duplicate code
@@ -216,8 +216,10 @@ module.exports = class CustomCollector {
                 if(this.page > 0) this.page--;
                 else this.page = this.maxPages - 1;
 
-                const msgContent = this.images[this.page].msg ? this.images[i].msg : `Card [${this.page}/${this.maxPages - 2}]`;
-                this.message = await this.interaction.editReply({ content: msgContent, files: [this.images[this.page]], components: this.components }).catch(e => console.error(e));   
+                const files = [];
+                if (!this.images[this.page].notImage) { files.push(this.images[this.page]); }
+                const msgContent = `${this.page < this.maxPages - 1 ? `Card [${this.page}/${this.maxPages - 2}]` : ''}${this.images[this.page].msg ?? ''}`;
+                this.message = await this.interaction.editReply({ content: msgContent, files: files, components: this.components }).catch(e => console.error(e));   
             }, prevPageEmoji));
 
             if(!options.noNext) buttonRow.push(this.createButton('Next', ButtonStyle.Secondary, async() => {
@@ -229,8 +231,10 @@ module.exports = class CustomCollector {
                 if(options.disappearOnLast && this.page == this.maxPages - 1) 
                     this.components = [];
 
-                const msgContent = this.images[this.page].msg ? this.images[this.page].msg : `Card [${this.page}/${this.maxPages - 2}]`;
-                this.message = await this.interaction.editReply({ content: msgContent, files: [this.images[this.page]], components: this.components }).catch(e => console.error(e));   
+                const files = [];
+                if (!this.images[this.page].notImage) { files.push(this.images[this.page]); }
+                const msgContent = `${this.page < this.maxPages - 1 ? `Card [${this.page}/${this.maxPages - 2}]` : ''}${this.images[this.page].msg ?? ''}`;
+                this.message = await this.interaction.editReply({ content: msgContent, files: files, components: this.components }).catch(e => console.error(e));   
             }, nextPageEmoji));
 
             this.addButtonRow(buttonRow);
@@ -257,6 +261,23 @@ module.exports = class CustomCollector {
         // User can only confirm/decline once
         this.options.max = 1;
     }
+ 
+    /**
+     * Adds a cancel button to end command
+     * @param {Users} user - User fetched from DB
+     */
+    addCancelButton(userId, callbackFn) {
+        let interaction = this.interaction;
+
+        // Add cancel button
+        this.addButtonRow([
+            this.createButton('Cancel', ButtonStyle.Danger, async function() {
+                await DbUser.unpauseUser(userId);
+                if(callbackFn) callbackFn();
+                return interaction.editReply({ content: "The command timed out.", components: [], embeds: [] }).catch(e => console.log(e));	
+            }),
+        ]);
+    }
 
     /**
      * Adds all the component IDs that the filter should listen for
@@ -277,7 +298,8 @@ module.exports = class CustomCollector {
      */
     checkFilter(i) {
         const idArray = Object.keys(this.parent.componentIds);
-        return ( i.user.id == ( this.options?.overrideId ?? this.parent.interaction.user.id ) ) && (idArray.includes(i.customId));
+        const id = this.parent.options?.overrideId ?? this.parent.interaction.user.id;
+        return i.user.id === id && idArray.includes(i.customId);
     }
 
     /**
@@ -285,7 +307,7 @@ module.exports = class CustomCollector {
      */
     async init(msg) {
         this.initFilter();
-        this.message = await this.interaction.editReply({ content: msg ?? ` `, embeds: this.embeds, files: this.images.length ? [this.images[0]] : [], components: this.components }).catch(e => console.error(e));   
+        this.message = await this.interaction.editReply({ content: msg ?? ` `, embeds: this.embeds, files: this.images[0] && !this.images[0].notImage ? [this.images[0]] : [], components: this.components }).catch(e => console.error(e));   
         this.collector = this.message.createMessageComponentCollector({ 
             filter: this.checkFilter, 
             time: this.options.time ? this.options.time : 300_000, 
@@ -306,6 +328,7 @@ module.exports = class CustomCollector {
             this.componentIds[i.customId](i);
         });
         this.collector.on('end', async collected => {
+            await DbUser.unpauseUser(this.interaction.user.id);
 			if(collected.size <= 0) {
 				return this.interaction.editReply({ content: "The command timed out.", components: [], embeds: [] }).catch(e => console.error(e));	
 			} else {

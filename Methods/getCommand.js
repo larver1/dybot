@@ -1,4 +1,5 @@
 const { Collection } = require('discord.js');
+const { Commands } = require('../Database/Objects');
 
 module.exports = {
     name: "getCommand",
@@ -20,6 +21,17 @@ module.exports = {
             }
         } 
     
+        // Check if command is locked.
+        const dbCommand = await Commands.findOne({ where: { commandName: commandName } });
+        if(dbCommand && dbCommand.locked && interaction.user.id != interaction.client.config.adminId)
+        {
+            if(interaction.deferred || interaction.replied)
+                await interaction.editReply(`This command is currently locked. Please try later.`).catch(e => {console.log(e)});
+            else
+                await interaction.reply(`This command is currently locked. Please try later.`).catch(e => {console.log(e)});
+            return null;
+        }
+
         if(!interaction.client.cooldowns.has(command.data.name))
             interaction.client.cooldowns.set(command.data.name, new Collection());
     

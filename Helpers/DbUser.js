@@ -16,6 +16,18 @@ module.exports = class DbUser {
 		return user;
     }
 
+    static async pauseUser(id, pauseValue = 1) {
+        const user = await this.findUser(id);
+        user.paused = pauseValue;
+        await user.save();
+    }
+
+    static async unpauseUser(id) {
+        const user = await this.findUser(id);
+        user.paused = 0;
+        await user.save();
+    }
+
     /**
 	 * Creates a user with the given ID and tag
 	 * @param {string} id - User's discord ID.
@@ -24,6 +36,7 @@ module.exports = class DbUser {
     static async createUser(id, leaderboard) {
         const user = await Users.create({
             user_id: id,
+            paused: 0,
             balance: 0,
             archive: '',
             leaderboard: leaderboard

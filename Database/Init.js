@@ -1,7 +1,6 @@
 const Sequelize = require('sequelize');
 const { dbName, dbUser, dbPass, debug } = require('../config.json');
 const conn = {};
-
 const fs = require('fs');
 const couponData = JSON.parse(fs.readFileSync('./Objects/Coupons.json'));
 
@@ -45,6 +44,7 @@ require('../Database/Models/OrderItems.js')(sequelize, Sequelize.DataTypes);
 require('../Database/Models/UserCoupons.js')(sequelize, Sequelize.DataTypes);
 require('../Database/Models/Users.js')(sequelize, Sequelize.DataTypes);
 require('../Database/Models/UserCards.js')(sequelize, Sequelize.DataTypes);
+var Commands = require('../Database/Models/Commands')(sequelize, Sequelize.DataTypes);
 
 const force = false;
 
@@ -61,6 +61,26 @@ sequelize.sync({ force }).then(async () => {
 			discount: coupon.discount
 		});
 	}
+
+	// Gets all the folders
+	const commandFolder = fs.readdirSync('./Commands', { withFileTypes: true })
+	.filter((item) => item.isDirectory())
+	.map((item) => item.name);
+
+	// Adds all the commands in each sub-folder
+	const commands = [];
+	for (const folder of commandFolder) {
+		 // Find all events in each sub folder
+		const commandFiles = fs.readdirSync(`./Commands/${folder}`).filter(file => file.endsWith('.js'));
+		for (const file of commandFiles) {
+			const command = require(`../Commands/${folder}/${file}`);
+			if(command.section != "dev") {
+				commands.push(await Commands.upsert({ commandName: command.data.name, locked: false }));
+			}
+		}
+	}
+
 	await Promise.all(shop);
+	await Promise.all(commands);
 	sequelize.close();
 }).catch(console.error);
