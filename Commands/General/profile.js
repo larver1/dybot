@@ -46,7 +46,7 @@ module.exports = {
 			warnCollector.on('end', async collected => {
 				if(collected.size <= 0) {
 					if(user) user.unpause();
-					return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
+					return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.error(e));	
 				}
 			});
 		} else {
@@ -59,7 +59,7 @@ module.exports = {
 		// Build profile embed
 		const profileEmbed = new CustomEmbed(interaction)
 			.setTitle(`${interaction.user.tag}'s Profile!`)
-			.setDescription(`DyDots: ${user.balance}`)
+			.setDescription(`Level: ${user.level}\nDyDots: ${user.balance}${user.first_pack ? '\nFirst Pack: ' +  `<t:${(user.first_pack / 1000)}:f>` : '\n'}`)
 			.setThumbnail(interaction.user.displayAvatarURL())
 
 		// Build coupons embed
@@ -69,7 +69,7 @@ module.exports = {
 			.setDescription(couponsMsg)
 
 		// Display it
-		await interaction.editReply({ embeds: [profileEmbed, couponsEmbed], components: [] }).catch(e => console.log(e));
-		if(newProfileMessage) await interaction.followUp(`${interaction.user}, your profile has been created!\n\n${newProfileMessage}`).catch(e => console.log(e));
+		await interaction.editReply({ embeds: [profileEmbed, couponsEmbed], components: [] }).catch(e => console.error(e));
+		if(newProfileMessage) await interaction.followUp(`${interaction.user}, your profile has been created!\n\n${newProfileMessage}`).catch(e => console.error(e));
 	}
 }

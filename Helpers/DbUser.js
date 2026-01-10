@@ -25,6 +25,7 @@ module.exports = class DbUser {
         const user = await Users.create({
             user_id: id,
             balance: 0,
+            archive: '',
             leaderboard: leaderboard
         });
         return user;

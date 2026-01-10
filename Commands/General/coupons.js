@@ -69,7 +69,7 @@ module.exports = {
         .setTitle('Coupons to Redeem')
         .setDescription(msg)
 
-        return interaction.editReply({ embeds: [shopEmbed] }).catch(e => console.log(e));
+        return interaction.editReply({ embeds: [shopEmbed] }).catch(e => console.error(e));
     },
     /**
      * Buy a coupon with your balance
@@ -91,7 +91,7 @@ module.exports = {
 
         if(!(await user.takeMoney(cost))) {
             user.unpause();
-            return interaction.editReply(`You do not have enough DyDots to redeem \`x${amount} ${type}\``).catch(e => console.log(e));
+            return interaction.editReply(`You do not have enough DyDots to redeem \`x${amount} ${type}\``).catch(e => console.error(e));
         }
 
         await user.addCoupon(couponType, amount);

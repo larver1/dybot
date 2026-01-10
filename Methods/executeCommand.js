@@ -6,7 +6,7 @@ module.exports = {
 	async execute(interaction, command) {
 
 		const user = await DbUser.findUser(interaction.user.id);
-		if(!user && command.data.name != "profile") return interaction.editReply("You must create a profile to use DyBot. Use `/profile` to begin.").catch(e => {console.log(e)});
+		if(!user && command.data.name != "profile") return interaction.editReply("You must create a profile to use DyBot. Use `/profile` to begin.").catch(e => {console.error(e)});
 
 		// If user has been paused out of commands for too long, unlock them
 		if(user && user.paused) {
@@ -14,7 +14,7 @@ module.exports = {
 				user.paused = false;
 				await user.save();
 			} else {
-				return interaction.editReply({ content: `Please wait until your previous command is finished `}).catch(e => console.log(e));
+				return interaction.editReply({ content: `Please wait until your previous command is finished `}).catch(e => console.error(e));
 			}
 		}
 

@@ -74,6 +74,6 @@ module.exports = {
         .setTitle('Commission List')
         .setDescription(`${msg}\n\n__Use \`/commission create\` to place an order__`)
 
-        return interaction.editReply({ embeds: [commissionsEmbed] }).catch(e => console.log(e));
+        return interaction.editReply({ embeds: [commissionsEmbed] }).catch(e => console.error(e));
     },
 }

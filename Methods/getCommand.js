@@ -36,9 +36,9 @@ module.exports = {
             {
                 const timeLeft = (expirationTime - now) / 1000;
                     if(interaction.deferred || interaction.replied)
-                        await interaction.editReply(`Please wait ${timeLeft.toFixed(2)} seconds before using this command again.`).catch(e => {console.log(e)});
+                        await interaction.editReply(`Please wait ${timeLeft.toFixed(2)} seconds before using this command again.`).catch(e => {console.error(e)});
                     else
-                        await interaction.reply(`Please wait ${timeLeft.toFixed(2)} seconds before using this command again.`).catch(e => {console.log(e)});	
+                        await interaction.reply(`Please wait ${timeLeft.toFixed(2)} seconds before using this command again.`).catch(e => {console.error(e)});	
                 return null;
             }
         }

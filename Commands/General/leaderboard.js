@@ -62,7 +62,7 @@ module.exports = {
         }
 
         msg += `\n\nYou have ${user.balance} DyDots. You are in position ${userPosition}`;
-        await interaction.editReply({ content: msg }).catch(e => console.log(e));
+        await interaction.editReply({ content: msg }).catch(e => console.error(e));
     },
     /**
      * Changes a user's visibility on the leaderboard
@@ -73,6 +73,6 @@ module.exports = {
         const user = await DbUser.findUser(interaction.user.id);
         user.setDataValue('leaderboard', visible);
         await user.save();
-        await interaction.editReply({ content: `You are now ${visible ? `visible` : `hidden from`} \`/leaderboard view\`.` }).catch(e => console.log(e));
+        await interaction.editReply({ content: `You are now ${visible ? `visible` : `hidden from`} \`/leaderboard view\`.` }).catch(e => console.error(e));
     }
 }
