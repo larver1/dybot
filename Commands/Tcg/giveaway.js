@@ -58,7 +58,7 @@ module.exports = {
             maxlevel.setName('maxlevel')
             .setDescription('Card\'s Maximum Level.')
             .setRequired(false)),
-    help: `Allows you to give away cards from your tradebox.`,
+    help: `Give away some of your duplicate cards to other people! The winner is picked at random so it's a fun little gamble! Only cards in your tradebox can be given away.`,
 	/**
 	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
@@ -95,8 +95,12 @@ module.exports = {
             }
         }
 
+        await DbUser.pauseUser(interaction.user.id);
         const cards = await DbUserCards.findFilteredUserCards(interaction.user.id, {favourited: false, ...filters} );
-        if(!cards || !cards.length) return interaction.editReply(`You have no cards in your \`/tradebox\` with the applied filters.`);
+        if(!cards || !cards.length) {
+            await DbUser.unpauseUser(interaction.user.id);
+            return interaction.editReply(`You have no cards in your \`/tradebox\` with the applied filters.`);
+        } 
 
         const collector = new CustomCollector(interaction, {}, async() => {});
         collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, emoji: card.emoji, cardToRender: card.data.image }) ), async(i) => {
@@ -116,6 +120,7 @@ module.exports = {
             
             this.collectEntries(interaction, msg, selectedCards);
         }, { pickAll: true });
+        collector.addCancelButton(interaction.user.id);
         await collector.start();
     },
     async collectEntries(interaction, msg, cards) {
@@ -148,6 +153,7 @@ module.exports = {
 				return;
             }
 
+            await DbUser.unpauseUser(interaction.user.id);
             const won = enteredGa[Math.floor(Math.random() * enteredGa.length)];
             this.giveCards(interaction, cards, won);
         });

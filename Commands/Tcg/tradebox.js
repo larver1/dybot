@@ -50,14 +50,6 @@ module.exports = {
                     { name: 'No', value: 'no'},  
                 )
                 .setRequired(false))
-            .addStringOption(favourited =>
-                favourited.setName('favourited')
-                .setDescription('Include favourites or exclude them.')
-                .addChoices(
-                    { name: 'Yes', value: 'yes'},
-                    { name: 'No', value: 'no'},  
-                )
-                .setRequired(false))
             .addIntegerOption(minlevel =>
                 minlevel.setName('minlevel')
                 .setDescription('Card\'s Minimum Level.')
@@ -86,7 +78,7 @@ module.exports = {
             holo: interaction.options.getString('holo'),
             minlevel: interaction.options.getInteger('minlevel'),
             maxlevel: interaction.options.getInteger('maxlevel'),
-            favourited: interaction.options.getString('favourited'),
+            favourited: 'no',
         };
 
        filters.tradebox = (subCommand == "remove" ) ? 'yes' : 'no';
@@ -106,6 +98,7 @@ module.exports = {
             .setDescription(`The following cards have been ${subCommand == 'remove' ? 'removed from' : 'added to' } the trade box.\n${MessageHelper.displayCardList(selectedCards, '')}`)
             await interaction.editReply( { embeds: [tradeboxComplete], components: [] }).catch(e => console.error(e));
         }, { pickAll: true } );
+        collector.addCancelButton(interaction.user.id);
         await collector.start();
     },
 }

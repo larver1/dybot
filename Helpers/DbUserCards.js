@@ -92,7 +92,6 @@ module.exports = class DbUserCards {
 
         if(!user.archive.includes(`${dbCard.card_name},`)) {
             user.archive += `${dbCard.card_name},`;
-            console.log(user.archive);
             await user.save();
         }
 
@@ -103,10 +102,9 @@ module.exports = class DbUserCards {
         for ( const card of cards ) {
             card.user_id = newId;
             await card.save();
-            const user = await Users.findOne({ where: { user_id: userId }, attributes: [ 'user_id', 'archive' ] });
+            const user = await Users.findOne({ where: { user_id: newId }, attributes: [ 'user_id', 'archive' ] });
             if(!user.archive.includes(`${card.card_name},`)) {
                 user.archive += `${card.card_name},`;
-                console.log(user.archive);
                 await user.save();
             }
         }

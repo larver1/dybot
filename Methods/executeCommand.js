@@ -4,7 +4,6 @@ const DbUser = require('../Helpers/DbUser.js');
 module.exports = {
 	name: "executeCommand",
 	async execute(interaction, command) {
-
 		const user = await DbUser.findUser(interaction.user.id);
 		if(!user && command.data.name != "profile") return interaction.editReply("You must create a profile to use DyBot. Use `/profile` to begin.").catch(e => {console.error(e)});
 

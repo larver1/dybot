@@ -25,9 +25,10 @@ const Orders = require('./Models/Orders.js')(sequelize, Sequelize.DataTypes, Ord
 const UserCoupons = require('./Models/UserCoupons.js')(sequelize, Sequelize.DataTypes);
 const UserCards = require('./Models/UserCards.js')(sequelize, Sequelize.DataTypes);
 const Users = require('./Models/Users.js')(sequelize, Sequelize.DataTypes, UserCoupons);
+const Commands = require('./Models/Commands.js')(sequelize, Sequelize.DataTypes, UserCoupons);
 
 UserCoupons.belongsTo(Coupons, { foreignKey: 'coupon_id', as: 'coupon' });
 OrderItems.belongsTo(Orders, { foreignKey: 'order_id', as: 'item' });
 
 // Export all models to be accessed in application
-module.exports = { Coupons, Orders, OrderItems, UserCoupons, UserCards, Users, sequelize };
+module.exports = { Coupons, Orders, OrderItems, UserCoupons, UserCards, Users, Commands, sequelize };
