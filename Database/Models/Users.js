@@ -237,7 +237,7 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
         if(!this.last_pack) return true;
         const now = new Date();
         const timeDifference = now.getTime() - this.last_pack.getTime();
-        const numHoursInMilliseconds = 6 * 60 * 60 * 1000; 
+        const numHoursInMilliseconds = 1 * 60 * 60 * 1000; 
         return timeDifference >= numHoursInMilliseconds;
 	};
 

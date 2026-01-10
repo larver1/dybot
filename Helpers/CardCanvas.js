@@ -16,8 +16,9 @@ async function loadAssets(){
         assets[card.id] = {};
         const dir = await fs.readdirSync(`./Assets/Cards/${card.id}`);
         for(const file of dir) {
-            if(file.length != 8) throw Error('File name is not in correct format.');
-            assets[card.id][file] = await Canvas.loadImage(`./Assets/Cards/${card.id}/${file}`);
+            if(file.length != 12) throw Error('File name is not in correct format.');
+            const cardName = file.replace(card.id, "");
+            assets[card.id][cardName] = await Canvas.loadImage(`./Assets/Cards/${card.id}/${file}`);
         }
         console.log("finished loading cards assets.");
     }
@@ -78,7 +79,7 @@ module.exports = class CardCanvas {
 
         // Stats
         this.setFont(60);
-        await this.displayStat(`Lv.${this.card.lvl}`, 378 - this.ctx.measureText(`Lv.${this.card.lvl}`).width + 200, 125);
+        await this.displayStat(`Lv.${this.card.lvl}`, 378 - this.ctx.measureText(`Lv.${this.card.lvl}`).width + 200, 110);
 
         this.setFont(60);
         this.ctx.bold

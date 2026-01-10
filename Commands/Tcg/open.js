@@ -24,14 +24,17 @@ module.exports = {
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
 	 */
 	async execute(interaction) {
-
+        await DbUser.pauseUser(interaction.user.id);
         const user = await DbUser.findUser(interaction.user.id);
-        if(!user.canOpenPack() && !interaction.client.config.debug) return interaction.editReply({ content: `You opened a pack <t:${(user.last_pack / 1000)}:R>. You can only open a pack every \`6 hours\`.` }).catch(e => console.error(e));
+        if(!user.canOpenPack() && !interaction.client.config.debug) {
+            await DbUser.unpauseUser(interaction.user.id);
+            return interaction.editReply({ content: `You opened a pack <t:${(user.last_pack / 1000)}:R>. You can only open a pack every \`6 hours\`.` }).catch(e => console.error(e));
+        } 
 
         // Get cards and store to user
         const pack = await CardBuilder.openPack();
 
-        const renders = ["https://cdn.discordapp.com/attachments/1209523305975906304/1378406053946982527/opening.gif?ex=683c7c2c&is=683b2aac&hm=046f07fa1633ad32a8f651bafadc42664f9c297076672b6c66e0094d35e31b3d&"];
+        const renders = [{ notImage: true }];
         const fullImages = [];
         for(const card of pack) {
             const newCard = await DbUserCards.giveUserCard(interaction.user.id, card);
@@ -39,12 +42,13 @@ module.exports = {
             const render = new CardCanvas(interaction, newCard);
             await render.createCard();
             renders.push(render.getCard());
+            renders[renders.length - 1].msg = MessageHelper.displayCardList([newCard], "");
         }
 
         const fullImage = new CardsView(interaction, fullImages);
         await fullImage.createCards();
         const canvas = fullImage.getCards();
-        canvas.msg = " ";
+        canvas.msg = MessageHelper.displayCardList(pack, "");
         renders.push(canvas);
         await user.resetPackTimer();
 
@@ -52,7 +56,7 @@ module.exports = {
         const collector = new CustomCollector(interaction, {}, async() => {});
         collector.images = renders;
         collector.addImagePages({ noPrev: true, disappearOnLast: true });
-        await collector.start();    
+        await collector.start("Press Next to open your pack of 5 cards!");    
+        await DbUser.unpauseUser(interaction.user.id);
     },
-
 }
