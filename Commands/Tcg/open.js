@@ -18,7 +18,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('open')
 		.setDescription('Open a pack of cards.'),
-    help: `Open a pack of five cards once every 6 hours.`,
+    help: `Open a pack of five cards once every hour.`,
 	/**
 	 * Runs when command is called
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
@@ -28,7 +28,7 @@ module.exports = {
         const user = await DbUser.findUser(interaction.user.id);
         if(!user.canOpenPack() && !interaction.client.config.debug) {
             await DbUser.unpauseUser(interaction.user.id);
-            return interaction.editReply({ content: `You opened a pack <t:${(user.last_pack / 1000)}:R>. You can only open a pack every \`6 hours\`.` }).catch(e => console.error(e));
+            return interaction.editReply({ content: `You opened a pack <t:${(user.last_pack / 1000)}:R>. You can only open a pack every \`1 hour\`.` }).catch(e => console.error(e));
         } 
 
         // Get cards and store to user
@@ -48,7 +48,7 @@ module.exports = {
         const fullImage = new CardsView(interaction, fullImages);
         await fullImage.createCards();
         const canvas = fullImage.getCards();
-        canvas.msg = MessageHelper.displayCardList(pack, "");
+        canvas.msg = MessageHelper.displayCardList(fullImages, "");
         renders.push(canvas);
         await user.resetPackTimer();
 
