@@ -23,7 +23,7 @@ module.exports = {
 			console.error(error);
 			user.paused = false;
 			await user.save();
-			await interaction.editReply({ content: 'There was an error while executing this command! Please report this error.', ephemeral: true });
+			await interaction.editReply({ content: 'There was an error while executing this command! Please report this error to Dyron.', ephemeral: true });
 		}
     },
 	/**

@@ -106,14 +106,14 @@ module.exports = {
         collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, emoji: card.emoji, cardToRender: card.data.image }) ), async(i) => {
             const selectedCards = [];
             const now = new Date();
-            const halfMinuteFromNow = now.setSeconds(now.getSeconds() + 30);
+            const fiveMinutesFromNow = now.setMinutes(now.getMinutes() + 5);
 
             i.values.map(index => selectedCards.push(cards[index]));
             
             const msg = await interaction.editReply({ embeds: [
                 new CustomEmbed(interaction)
                 .setTitle(`The following cards are being given away!`)
-                .setDescription(MessageHelper.displayCardList(selectedCards, `React with a ❤️ to enter.\nThe winner will be randomly decided <t:${(Math.round(halfMinuteFromNow / 1000))}:R>.`))
+                .setDescription(MessageHelper.displayCardList(selectedCards, `React with a ❤️ to enter.\nThe winner will be randomly decided <t:${(Math.round(fiveMinutesFromNow / 1000))}:R>.`))
                 ], components: []}).catch(e => console.error(e));
 
             await msg.react(`❤️`).catch(e => { console.log(e)});
@@ -128,7 +128,7 @@ module.exports = {
 		const enteredGa = [];
 
 		const gaFilter = (reaction) => reaction.emoji.name === '❤️';
-		const gaCollector = msg.createReactionCollector({ filter: gaFilter, time: 30000, min: 1, errors: ['time'] });
+		const gaCollector = msg.createReactionCollector({ filter: gaFilter, time: 5 * 60 * 1000, min: 1, errors: ['time'] });
 			
 		gaCollector.on('collect', async (reaction, claimUser) =>
 		{

@@ -116,7 +116,7 @@ module.exports = class DbUserCards {
      * @param {Object} card - Card's details
      */
     static async updateUserCard(card, changes) {     
-        if(changes.fav) { card.fav = changes.fav; }
+        if(Object.hasOwn(changes, "fav")) { card.fav = changes.fav; }
         if(Object.hasOwn(changes, "tradebox")) { card.in_tradebox = changes.tradebox; }
         return card.save();
     }

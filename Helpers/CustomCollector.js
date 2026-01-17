@@ -274,7 +274,7 @@ module.exports = class CustomCollector {
             this.createButton('Cancel', ButtonStyle.Danger, async function() {
                 await DbUser.unpauseUser(userId);
                 if(callbackFn) callbackFn();
-                return interaction.editReply({ content: "The command timed out.", components: [], embeds: [] }).catch(e => console.log(e));	
+                return interaction.editReply({ content: "The command timed out.", components: [] }).catch(e => console.log(e));	
             }),
         ]);
     }
