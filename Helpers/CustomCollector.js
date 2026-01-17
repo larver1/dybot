@@ -225,7 +225,7 @@ module.exports = class CustomCollector {
             if(!options.noNext) buttonRow.push(this.createButton('Next', ButtonStyle.Secondary, async() => {
                 // Update page number
                 if(this.page < this.maxPages - 1) this.page++;
-                else this.page = 0;
+                else if (!options.disappearOnLast) this.page = 0;
 
                 // No more buttons on last page
                 if(options.disappearOnLast && this.page == this.maxPages - 1) 
