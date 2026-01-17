@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 			allowNull: false,
 		},
 		archive: {
-			type: DataTypes.STRING,
+			type: DataTypes.TEXT('long'),
 			default: ''
 		},
 		leaderboard: {
