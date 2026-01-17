@@ -21,6 +21,8 @@ module.exports = {
 			await command.execute(interaction, command);
 		} catch (error) {
 			console.error(error);
+			user.paused = false;
+			await user.save();
 			await interaction.editReply({ content: 'There was an error while executing this command! Please report this error.', ephemeral: true });
 		}
     },
