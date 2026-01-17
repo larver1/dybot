@@ -7,7 +7,7 @@ const CardCanvas = require('../../Helpers/CardCanvas.js');
 const fs = require('fs');
 const CardData = JSON.parse(fs.readFileSync('./Objects/CardData.json'));
 const rarities = ["Common", "Uncommon", "Rare", "Legendary", "Mythical"];
-const types = ["N", "G", "S", ];
+const types = ["N", "S", "G" ];
 const holos = ["N", "H"];
 const firstEditions = ["0", "1"];
 
