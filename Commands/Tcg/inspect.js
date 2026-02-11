@@ -81,7 +81,7 @@ module.exports = {
         const cards = await DbUserCards.findFilteredUserCards(interaction.user.id, filters);
         if(!cards || !cards.length) return interaction.editReply(`You have no cards with the applied filters.`);
 
-        const collector = new CustomCollector(interaction, {}, async() => {});
+        const collector = new CustomCollector(interaction, { hideComponentsOnTimeout: {} }, async() => {});
         collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, emoji: card.emoji, cardToRender: card.data.image }) ), async(i) => {
             const selectedCard = cards[parseInt(i.values[0])];
             if(!selectedCard.render) {
