@@ -310,7 +310,7 @@ module.exports = class CustomCollector {
         this.message = await this.interaction.editReply({ content: msg ?? ` `, embeds: this.embeds, files: this.images[0] && !this.images[0].notImage ? [this.images[0]] : [], components: this.components }).catch(e => console.error(e));   
         this.collector = this.message.createMessageComponentCollector({ 
             filter: this.checkFilter, 
-            time: this.options.time ? this.options.time : 10_000, 
+            time: this.options.time ? this.options.time : 300_000, 
             errors: ['time'],
             max: this.options.max ? this.options.max : null
         });
