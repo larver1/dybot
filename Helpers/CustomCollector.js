@@ -330,9 +330,11 @@ module.exports = class CustomCollector {
         this.collector.on('end', async collected => {
             await DbUser.unpauseUser(this.interaction.user.id);
 			if(collected.size <= 0) {
-				return this.interaction.editReply({ content: "The command timed out.", components: [], embeds: [] }).catch(e => console.error(e));	
+                const hideComponents = this.options?.hideComponentsOnTimeout ?? { components: [], embeds: [] };
+				return this.interaction.editReply({ content: "The command timed out.",  ...hideComponents }).catch(e => console.error(e));	
 			} else {
-                return this.interaction.editReply({ components: [] }).catch(e => console.error(e));
+                const hideComponents = this.options?.hideComponentsOnTimeout ?? { components: [] };
+                return this.interaction.editReply({ content: "The command timed out.",  ...hideComponents }).catch(e => console.error(e));
             }
         });
     }

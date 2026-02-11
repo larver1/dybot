@@ -22,6 +22,10 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('archive')
 		.setDescription('Allows you to see all types of card you have owned.')
+        .addStringOption(name =>
+            name.setName('name')
+            .setDescription('Specific name of card.')
+            .setRequired(false))
         .addStringOption(rarity =>
             rarity.setName('rarity')
             .setDescription('Rarity of card.')
@@ -68,7 +72,8 @@ module.exports = {
             rarity: interaction.options.getString('rarity'),
             type: interaction.options.getString('type'),
             holo: interaction.options.getString('holo'),
-            first: interaction.options.getString('first')
+            first: interaction.options.getString('first'),
+            name: interaction.options.getString('name')
         }; 
 
         const user = await DbUser.findUser(interaction.user.id, ['archive']);
@@ -77,13 +82,18 @@ module.exports = {
         const filteredTypes = filters.type ? [filters.type] : types;
         const filteredHolos = filters.holo ? [filters.holo] : holos;
         const filteredFirsts = filters.first ? [filters.first] : firstEditions;
+        const cards = filters.name ? CardData.filter( card => card.name.toLowerCase() === filters.name.toLowerCase() ) : CardData;
+
+        if( !cards.length ) {
+            return interaction.editReply("There are no cards to show.");
+        }
 
         const selectionList = [];
         selectionList[0] = "";
         let count = 0;
         let page = 0;
 
-        for (let i = 0; i < CardData.length; i++) {
+        for (let i = 0; i < cards.length; i++) {
             for (const rarity of filteredRarities) {    
                 for (const type of filteredTypes) {
                     for(const holo of filteredHolos) {
@@ -96,8 +106,8 @@ module.exports = {
                             } 
                             let id = `${i+1}${rarity[0]}${type}${holo}${firstEdition}`;
                             const msg = MessageHelper.displayArchiveCard(
-                                CardData[i].name, 
-                                CardData[i].emote, 
+                                cards[i].name, 
+                                cards[i].emote, 
                                 rarity, 
                                 type === 'G', type === 'S', holo === 'H', firstEdition === '1',
                                 user.archive.includes(id)
