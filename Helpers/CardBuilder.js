@@ -15,16 +15,18 @@ module.exports = class CardBuilder {
             case 1:
             case 2:
             case 3:
-                if(rand > 0.30) return "Common";
+                if(rand > 0.25) return "Common";
                 else return "Uncommon";
             case 4:
-                if(rand > 0.85) return "Common";
-                else if(rand > 0.25) return "Uncommon";
-                else if(rand > 0.10) return "Rare";
-                else return "Legendary";
+                if(rand > 0.78) return "Common";
+                else if(rand > 0.36) return "Uncommon";
+                else if(rand > 0.06) return "Rare";
+                else if(rand > 0.01) return "Legendary";
+                else return "Mythical";
             case 5:
-                if(rand > 0.4) return "Rare";
-                else if(rand > 0.1) return "Legendary";
+                if(rand > 0.75) return "Uncommon";
+                else if(rand > 0.22) return "Rare";
+                else if(rand > 0.07) return "Legendary";
                 else return "Mythical";
             default:
                 throw new Error('Invalid slot rarity!');
@@ -33,29 +35,37 @@ module.exports = class CardBuilder {
 
     /**
      * Roll for Gold/Star/Holo card
-     * @param {number} slot
+     * @param {string} rarity
      */
-    static rollGoldStarHolo(slot) {
+    static rollGoldStarHolo(rarity) {
         const resultObj = { gold: false, star: false, holo: false };
         const goldStarRng = Math.random();
         const holoRng = Math.random();
-        switch(slot) {
-            case 1:
-            case 2:
-            case 3:
-                if(goldStarRng < 0.02) resultObj.gold = true;
+        switch(rarity) {
+            case "Common":
+                if(goldStarRng < 0.05) resultObj.gold = true;
                 else if(goldStarRng < 0.17) resultObj.star = true;
-                if(holoRng < 0.12) resultObj.holo = true;
+                if(holoRng < 0.18) resultObj.holo = true;
                 break;
-            case 4:
-                if(goldStarRng < 0.025) resultObj.gold = true;
-                else if(goldStarRng < 0.195) resultObj.star = true;
-                if(holoRng < 0.14) resultObj.holo = true;
+            case "Uncommon":
+                if(goldStarRng < 0.065) resultObj.gold = true;
+                else if(goldStarRng < 0.215) resultObj.star = true;
+                if(holoRng < 0.23) resultObj.holo = true;
                 break;
-            case 5:
-                if(goldStarRng < 0.03) resultObj.gold = true;
-                else if(goldStarRng < 0.23) resultObj.star = true;
-                if(holoRng < 0.17) resultObj.holo = true;
+            case "Rare":
+                if(goldStarRng < 0.09) resultObj.gold = true;
+                else if(goldStarRng < 0.27) resultObj.star = true;
+                if(holoRng < 0.28) resultObj.holo = true;
+                break;
+            case "Legendary":
+                if(goldStarRng < 0.14) resultObj.gold = true;
+                else if(goldStarRng < 0.35) resultObj.star = true;
+                if(holoRng < 0.32) resultObj.holo = true;
+                break;
+            case "Mythical":
+                if(goldStarRng < 0.2) resultObj.gold = true;
+                else if(goldStarRng < 0.45) resultObj.star = true;
+                if(holoRng < 0.35) resultObj.holo = true;
                 break;
             default:
                 throw new Error('Invalid slot rarity!');
@@ -70,7 +80,7 @@ module.exports = class CardBuilder {
     static pullCard(slot) {        
         const card = {...cardTypes[Math.floor(Math.random() * cardTypes.length)]};
         card.rarity = this.rollRarity(slot);
-        card.details = this.rollGoldStarHolo(slot);
+        card.details = this.rollGoldStarHolo( card.rarity);
         return card;
     }
 
