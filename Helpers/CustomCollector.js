@@ -334,7 +334,7 @@ module.exports = class CustomCollector {
 				return this.interaction.editReply({ content: "The command timed out.",  ...hideComponents }).catch(e => console.error(e));	
 			} else {
                 const hideComponents = this.options?.hideComponentsOnTimeout ?? { components: [] };
-                return this.interaction.editReply({ content: "The command timed out.",  ...hideComponents }).catch(e => console.error(e));
+                return this.interaction.editReply({ ...hideComponents }).catch(e => console.error(e));
             }
         });
     }
