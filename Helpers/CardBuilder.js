@@ -43,29 +43,29 @@ module.exports = class CardBuilder {
         const holoRng = Math.random();
         switch(rarity) {
             case "Common":
-                if(goldStarRng < 0.05) resultObj.gold = true;
-                else if(goldStarRng < 0.17) resultObj.star = true;
-                if(holoRng < 0.18) resultObj.holo = true;
+                if(goldStarRng < 0.03) resultObj.gold = true;
+                else if(goldStarRng < 0.15) resultObj.star = true;
+                if(holoRng < ( resultObj.gold ? 0.35 : 0.18 ) ) resultObj.holo = true;
                 break;
             case "Uncommon":
-                if(goldStarRng < 0.065) resultObj.gold = true;
-                else if(goldStarRng < 0.215) resultObj.star = true;
-                if(holoRng < 0.23) resultObj.holo = true;
+                if(goldStarRng < 0.05) resultObj.gold = true;
+                else if(goldStarRng < 0.2) resultObj.star = true;
+                if(holoRng < ( resultObj.gold ? 0.35 : 0.23 ) ) resultObj.holo = true;
                 break;
             case "Rare":
-                if(goldStarRng < 0.09) resultObj.gold = true;
-                else if(goldStarRng < 0.27) resultObj.star = true;
-                if(holoRng < 0.28) resultObj.holo = true;
+                if(goldStarRng < 0.06) resultObj.gold = true;
+                else if(goldStarRng < 0.25) resultObj.star = true;
+                if(holoRng < ( resultObj.gold ? 0.35 : 0.28 ) ) resultObj.holo = true;
                 break;
             case "Legendary":
-                if(goldStarRng < 0.14) resultObj.gold = true;
-                else if(goldStarRng < 0.35) resultObj.star = true;
-                if(holoRng < 0.32) resultObj.holo = true;
+                if(goldStarRng < 0.08) resultObj.gold = true;
+                else if(goldStarRng < 0.29) resultObj.star = true;
+                if(holoRng < ( resultObj.gold ? 0.35 : 0.32 ) ) resultObj.holo = true;
                 break;
             case "Mythical":
-                if(goldStarRng < 0.2) resultObj.gold = true;
-                else if(goldStarRng < 0.45) resultObj.star = true;
-                if(holoRng < 0.35) resultObj.holo = true;
+                if(goldStarRng < 0.1) resultObj.gold = true;
+                else if(goldStarRng < 0.35) resultObj.star = true;
+                if(holoRng < ( resultObj.gold ? 0.35 : 0.35 ) ) resultObj.holo = true;
                 break;
             default:
                 throw new Error('Invalid slot rarity!');
