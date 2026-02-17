@@ -1,6 +1,7 @@
 const { Client, GatewayIntentBits, Partials , Options, Collection} = require('discord.js');
 const config = require('./config.json');
-const { ClusterClient, getInfo } = require('discord-hybrid-sharding');
+const schedule = require('node-schedule');
+const { ClusterClient } = require('discord-hybrid-sharding');
 
 // Init client
 const client = new Client({ 
@@ -47,12 +48,16 @@ client.cluster.on('ready', () => {
 	console.log("Cluster Ready");
 });
 
-
 async function init() {
 	// Load Commands and Events
 	require("./Handlers/commands")(client);
 	require("./Handlers/events")(client);
 	require("./Handlers/methods")(client);	
 }
+
+// Send out reminders at the start of each minute
+schedule.scheduleJob('0 * * * * *', async () => {
+	client.emit('sendReminder');		
+});
 
 client.login(config.token);
