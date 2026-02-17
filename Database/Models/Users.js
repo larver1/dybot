@@ -45,6 +45,10 @@ module.exports = (sequelize, DataTypes, UserCoupons) => {
 		level: {
 			type: DataTypes.INTEGER,
 			defaultValue: 1,
+		},
+		reminders: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: false,
 		}
 	}, {
 		timestamps: true,
