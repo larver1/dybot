@@ -56,10 +56,8 @@ async function init() {
 }
 
 // Send out reminders at the start of each minute
-if(!config.debug) {
-	schedule.scheduleJob('0 * * * * *', async () => {
-		client.emit('sendReminder');		
-	});
-}
+schedule.scheduleJob('0 * * * * *', async () => {
+	client.emit('sendReminder');		
+});
 
 client.login(config.token);

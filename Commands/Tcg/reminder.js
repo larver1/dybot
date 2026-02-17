@@ -23,11 +23,8 @@ module.exports = {
 	/**
 	 * User can get information regarding current Poké Catcher events and updates.
 	 * @param {CommandInteraction} interaction - User's interaction with bot.
-	 * @param {Users} user - User data fetched from DB.
-	 * @param {dbAccess} dbAccess - Reference to DB interface to perform queries.
-	 * @param {Object} extras - Extra data provided by the command handler
 	 */
-	async execute(interaction, user) {
+	async execute(interaction) {
 		const toggle = interaction.options.getString('toggle') == 'yes' ? true : false;
         const user = await DbUser.findUser(interaction.user.id);
 
