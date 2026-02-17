@@ -23,7 +23,7 @@ module.exports = {
       const user = await client.users.fetch(dbUser.user_id);
 
       // If user has reminders enabled, 1 hour has passed but no more, then remind
-      if(this.hasPassedXHours(1, dbUser.last_pack, now) && this.hasPassedXMins(60, dbUser.last_pack, now) && !this.hasPassedXMins(61, dbUser.last_pack, now)) {
+      if(this.hasPassedXMins(60, dbUser.last_pack, now) && !this.hasPassedXMins(61, dbUser.last_pack, now)) {
         usersToRemind += `${user} `;
       }
     }
