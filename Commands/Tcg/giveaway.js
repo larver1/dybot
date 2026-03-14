@@ -164,8 +164,7 @@ module.exports = {
         });
     },
     async giveCards( interaction, cards, won ) {
-        const claimUsername = CustomEmbed.getTag(won.tag);
-        const wonUser = await DbUser.findUser(won.id);
+        const claimUsername = won.username;
 
         await DbUserCards.changeOwnerOfCards(cards, won.id);
 
