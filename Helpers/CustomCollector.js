@@ -315,20 +315,28 @@ module.exports = class CustomCollector {
             max: this.options.max ? this.options.max : null
         });
         this.collector.parent = this;
+        return this.message;
     }
 
     /**
      * Starts listening for interactions
      */
     async start(msg) {
-        await this.init(msg);
+        const interactionMsg = await this.init(msg);
         this.collector.on('collect', async i => {
-            await i.deferUpdate().catch(e => {console.error(e)});
+            if (!this.options.overrideDeferMsg) {
+                await i.deferUpdate().catch(e => {console.error(e)});
+            }
+            
             this.callbackFn(i);
             this.componentIds[i.customId](i);
         });
         this.collector.on('end', async collected => {
             await DbUser.unpauseUser(this.interaction.user.id);
+            if ( this.interaction.deletedMsg ) { 
+                console.log("msg deleted so returning early");
+                return; 
+            }
 			if(collected.size <= 0) {
                 const hideComponents = this.options?.hideComponentsOnTimeout ?? { components: [], embeds: [] };
 				return this.interaction.editReply({ content: "The command timed out.",  ...hideComponents }).catch(e => console.error(e));	
@@ -337,6 +345,7 @@ module.exports = class CustomCollector {
                 return this.interaction.editReply({ ...hideComponents }).catch(e => console.error(e));
             }
         });
+        return interactionMsg;
     }
  
 }
