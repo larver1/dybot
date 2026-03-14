@@ -4,6 +4,8 @@ const MessageHelper = require('../../Helpers/MessageHelper.js');
 const DbUser = require('../../Helpers/DbUser.js');
 const DbUserCards = require('../../Helpers/DbUserCards.js');
 const CustomEmbed = require('../../Helpers/CustomEmbed.js');
+const { officialServerId, giveawayRoleId } = require('../../config.json');
+
 
 const giveawayCooldown = new Collection();
 const cooldownAmount = (300) * 1000;
@@ -102,26 +104,29 @@ module.exports = {
             return interaction.editReply(`You have no cards in your \`/tradebox\` with the applied filters.`);
         } 
 
-        const collector = new CustomCollector(interaction, {}, async() => {});
+        const collector = new CustomCollector(interaction, { overrideDeferMsg: true }, async() => {});
         collector.addSelectMenu(cards.map(card => ({ label: `${card.name} (${card.rarity})`, description: card.desc, value: card.index, emoji: card.emoji, cardToRender: card.data.image }) ), async(i) => {
             const selectedCards = [];
             const now = new Date();
             const fiveMinutesFromNow = now.setMinutes(now.getMinutes() + 5);
+            await interactionMsg.delete().catch(e => console.error(e));;
+            interaction.deletedMsg = true;
 
             i.values.map(index => selectedCards.push(cards[index]));
-            
-            const msg = await interaction.editReply({ embeds: [
+            const text = interaction.guild?.id === officialServerId ? `<@&${giveawayRoleId}>` : ` `;
+
+            await i.reply({ content: text, embeds: [
                 new CustomEmbed(interaction)
                 .setTitle(`The following cards are being given away!`)
                 .setDescription(MessageHelper.displayCardList(selectedCards, `React with a ❤️ to enter.\nThe winner will be randomly decided <t:${(Math.round(fiveMinutesFromNow / 1000))}:R>.`))
                 ], components: []}).catch(e => console.error(e));
-
+            const msg = await i.fetchReply();
             await msg.react(`❤️`).catch(e => { console.log(e)});
             
-            this.collectEntries(interaction, msg, selectedCards);
+            this.collectEntries(i, msg, selectedCards);
         }, { pickAll: true });
         collector.addCancelButton(interaction.user.id);
-        await collector.start();
+        const interactionMsg = await collector.start();
     },
     async collectEntries(interaction, msg, cards) {
         // Store IDs of users who have entered
