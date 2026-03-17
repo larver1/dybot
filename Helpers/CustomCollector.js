@@ -332,11 +332,11 @@ module.exports = class CustomCollector {
             this.componentIds[i.customId](i);
         });
         this.collector.on('end', async collected => {
-            await DbUser.unpauseUser(this.interaction.user.id);
             if ( this.interaction.deletedMsg ) { 
                 console.log("msg deleted so returning early");
                 return; 
             }
+            await DbUser.unpauseUser(this.interaction.user.id);
 			if(collected.size <= 0) {
                 const hideComponents = this.options?.hideComponentsOnTimeout ?? { components: [], embeds: [] };
 				return this.interaction.editReply({ content: "The command timed out.",  ...hideComponents }).catch(e => console.error(e));	
