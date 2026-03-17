@@ -110,22 +110,21 @@ module.exports = {
             const now = new Date();
             const fiveMinutesFromNow = now.setMinutes(now.getMinutes() + 5);
             await interactionMsg.delete().catch(e => console.error(e));;
-            interaction.deletedMsg = true;
 
             i.values.map(index => selectedCards.push(cards[index]));
             const text = interaction.guild?.id === officialServerId ? `<@&${giveawayRoleId}>` : ` `;
 
-            await i.reply({ content: text, embeds: [
+            const msg = await i.channel.send({ content: text, embeds: [
                 new CustomEmbed(interaction)
                 .setTitle(`The following cards are being given away!`)
                 .setDescription(MessageHelper.displayCardList(selectedCards, `React with a ❤️ to enter.\nThe winner will be randomly decided <t:${(Math.round(fiveMinutesFromNow / 1000))}:R>.`))
                 ], components: []}).catch(e => console.error(e));
-            const msg = await i.fetchReply();
             await msg.react(`❤️`).catch(e => { console.log(e)});
             
             this.collectEntries(i, msg, selectedCards);
         }, { pickAll: true });
         collector.addCancelButton(interaction.user.id);
+        interaction.deletedMsg = true;
         const interactionMsg = await collector.start();
     },
     async collectEntries(interaction, msg, cards) {
@@ -154,16 +153,16 @@ module.exports = {
                 let gaOver = new CustomEmbed(interaction)
                 .setTitle(`Giveaway ended with no entries`)
                 .setDescription(`The Cards were not given away.`)
-				await interaction.editReply({embeds: [gaOver]}).catch(e => { console.log(e)});
+				await msg.editReply({embeds: [gaOver]}).catch(e => { console.log(e)});
 				return;
             }
 
             await DbUser.unpauseUser(interaction.user.id);
             const won = enteredGa[Math.floor(Math.random() * enteredGa.length)];
-            this.giveCards(interaction, cards, won);
+            this.giveCards(interaction, cards, won, msg);
         });
     },
-    async giveCards( interaction, cards, won ) {
+    async giveCards( interaction, cards, won, msg ) {
         const claimUsername = won.username;
 
         await DbUserCards.changeOwnerOfCards(cards, won.id);
@@ -171,7 +170,7 @@ module.exports = {
         let gaOver = new CustomEmbed(interaction)
         .setTitle(`Giveaway was won by ${claimUsername}!`)
         .setDescription(MessageHelper.displayCardList(cards, `Given away to <@${won.id}>!`))
-        await interaction.editReply({embeds: [gaOver]}).catch(e => { console.log(e)});
+        await msg.edit({embeds: [gaOver]}).catch(e => { console.log(e)});
         return;
     }
 }
