@@ -286,13 +286,19 @@ module.exports = class MessageHelper {
 		return `${emoji} \`${msg}${MessageHelper.padString(msg, 20)} ${first ? '1️⃣' : ''}${gold ? '🪙' : ''}${star ? '🌠' : ''}${holo ? '🌈' : ''}\``;
 	}
 
-	static displayCardList(cards, infoText) {
+	static displayCardList(cards, infoText, countList) {
         let msg = `${infoText}\n\n`;
 		for(let i = 0; i < cards.length; i++) {
 			const card = cards[i];
 			const details = `${card.name} (${card.rarity})`;
 			const lvl = `lvl.${card.lvl}`;
-			msg += `${card.emoji} ${inlineCode(`${i + 1}.${i < 9 ? ' ' : ''} ${details}${MessageHelper.padString(details, 30, true)}: ${lvl}${MessageHelper.extraPadding(lvl, 8)}`)} ${card.desc}\n`;
+			let num = i + 1;
+			let separator = '.';
+			if (countList) {
+				num = countList[card.card_name];
+				separator = 'x';
+			}
+			msg += `${card.emoji} ${inlineCode(`${num}${separator}${num <= 9 ? ' ' : ''} ${details}${MessageHelper.padString(details, 30, true)}: ${lvl}${MessageHelper.extraPadding(lvl, 8)}`)} ${card.desc}\n`;
 		}
 
         return msg;

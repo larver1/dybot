@@ -137,7 +137,7 @@ module.exports = class CustomCollector {
                         .setPlaceholder(`[Page ${this.page + 1}/${this.maxPages}] Select`)
                         .setMaxValues(options.pickAll ? selectionList[this.page].length : 1);
 
-                    this.message = await this.interaction.editReply({ content: options?.msg ?? `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));   
+                    this.message = await this.interaction.editReply({ content: options?.msg ?? ` `, embeds: this.embeds, components: this.components }).catch(e => console.error(e));   
                 }, prevPageEmoji),
                 this.createButton('Next', ButtonStyle.Secondary, async() => {
                     // Update page number
@@ -151,7 +151,7 @@ module.exports = class CustomCollector {
                         .setPlaceholder(`[Page ${this.page + 1}/${this.maxPages}] Select`)
                         .setMaxValues(options.pickAll ? selectionList[this.page].length : 1);
 
-                    this.message = await this.interaction.editReply({ content: options?.msg ?? `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));
+                    this.message = await this.interaction.editReply({ content: options?.msg ?? ` `, embeds: this.embeds, components: this.components }).catch(e => console.error(e));
                 }, nextPageEmoji)
             ]);
         }
@@ -182,7 +182,7 @@ module.exports = class CustomCollector {
                         .setTitle(`[Page ${this.page + 1}/${this.maxPages}] ${title}`)
                         .setDescription(embed.descriptionList[this.page])
 
-                    this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));   
+                    this.message = await this.interaction.editReply({ content: ` `, embeds: this.embeds, components: this.components }).catch(e => console.error(e));   
                 }, prevPageEmoji),
                 this.createButton('Next', ButtonStyle.Secondary, async() => {
                     // Update page number
@@ -195,7 +195,7 @@ module.exports = class CustomCollector {
                         .setTitle(`[Page ${this.page + 1}/${this.maxPages}] ${title}`)
                         .setDescription(embed.descriptionList[this.page])
 
-                    this.message = await this.interaction.editReply({ content: `Collector has updated`, embeds: this.embeds, components: this.components }).catch(e => console.error(e));  
+                    this.message = await this.interaction.editReply({ content: ` `, embeds: this.embeds, components: this.components }).catch(e => console.error(e));  
                 }, nextPageEmoji)
             ]);
         }

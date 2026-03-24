@@ -2,6 +2,34 @@ const { UserCards, Users } = require('../Database/Objects');
 const fs = require('fs');
 const CardData = JSON.parse(fs.readFileSync('./Objects/CardData.json'));
 const { Op } = require("sequelize");
+const rarities = {
+    "Common": 0, 
+    "Uncommon": 1, 
+    "Rare": 2, 
+    "Legendary": 3, 
+    "Mythical": 4
+};
+const types = ["N", "S", "G" ];
+const holos = [false, true];
+const firstEditions = [false, true];
+
+function getCardType(card) {
+    if (card.star) return "S";
+    if (card.gold) return "G";
+    return "N";
+}
+
+function getSubSortValue(card) {
+    for (let i = 0; i < types.length; i++) {
+        for(let j = 0; j < holos.length; j++) {
+            for(let k = 0; k < firstEditions.length; k++) {
+                if(getCardType(card) === types[i] && card.holo === holos[j] && card.first_edition === firstEditions[k] ) {
+                    return (i * 3) + (j * 2) + k;
+                }
+            }
+        }
+    }
+}
 
 /**
  * Interface for performing DB operations to a user.
@@ -64,6 +92,48 @@ module.exports = class DbUserCards {
         if(filters.tradebox) query.in_tradebox = filters.tradebox == 'yes' ? true : false;
 
         return UserCards.findAll({ where: query });
+    }
+
+    static sortCards(cards, sortType) {
+        switch(sortType) {
+            case "amount": 
+                const cardCounts = {};
+                for( const card of cards ) {
+                    if (cardCounts[card.card_name]) {cardCounts[card.card_name]++;} 
+                    else {cardCounts[card.card_name] = 1;}
+                }
+                cards = cards.sort( (a, b) => {
+                    if(cardCounts[a.card_name] < cardCounts[b.card_name]) return 1;
+                    if(cardCounts[a.card_name] > cardCounts[b.card_name]) return -1;
+                    else return getSubSortValue(a) > getSubSortValue(b) ? -1 : 1;
+                } );
+                break;
+            case "name":
+                cards = cards.sort( (a, b) => {
+                    if(a.name > b.name) return 1;
+                    if(a.name < b.name) return -1;
+                    else return getSubSortValue(a) < getSubSortValue(b) ? -1 : 1;
+                } );
+                break;
+            case "id":
+                cards = cards.sort( (a, b) => {
+                    if(a.dex_id > b.dex_id) return 1;
+                    if(a.dex_id < b.dex_id) return -1;
+                    else return getSubSortValue(a) < getSubSortValue(b) ? -1 : 1;
+                } );
+                break;
+            case "rarity":
+                cards = cards.sort( (a, b) => {
+                    if(rarities[a.rarity] < rarities[b.rarity]) return 1;
+                    if(rarities[a.rarity] > rarities[b.rarity]) return -1;
+                    else return getSubSortValue(a) < getSubSortValue(b) ? -1 : 1;
+                } );
+                break;
+            default:
+                console.error("no sort specified");
+                break;
+        }
+        return cards;
     }
 
     /**
