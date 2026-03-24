@@ -298,7 +298,7 @@ module.exports = class MessageHelper {
 				num = countList[card.card_name];
 				separator = 'x';
 			}
-			msg += `${card.emoji} ${inlineCode(`${num}${separator}${num < 9 ? ' ' : ''} ${details}${MessageHelper.padString(details, 30, true)}: ${lvl}${MessageHelper.extraPadding(lvl, 8)}`)} ${card.desc}\n`;
+			msg += `${card.emoji} ${inlineCode(`${num}${separator}${num <= 9 ? ' ' : ''} ${details}${MessageHelper.padString(details, 30, true)}: ${lvl}${MessageHelper.extraPadding(lvl, 8)}`)} ${card.desc}\n`;
 		}
 
         return msg;

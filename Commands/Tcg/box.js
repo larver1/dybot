@@ -15,9 +15,15 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('box')
 		.setDescription('Shows a view of all cards you own with the filters specified.')
-        .addStringOption(name =>
-            name.setName('name')
-            .setDescription('Character name.')
+        .addStringOption(sort =>
+            sort.setName('sort')
+            .setDescription('Sort the cards in a specific way.')
+            .addChoices(
+                { name: 'Name', value: 'name'},
+                { name: 'ID', value: 'id'},  
+                { name: 'Amount', value: 'amount'},
+                { name: 'Rarity', value: 'rarity'},    
+            )
             .setRequired(false))
         .addStringOption(stacking =>
             stacking.setName('stacking')
@@ -26,6 +32,10 @@ module.exports = {
                 { name: 'Yes', value: 'yes'},
                 { name: 'No', value: 'no'},  
             )
+            .setRequired(false))
+        .addStringOption(name =>
+            name.setName('name')
+            .setDescription('Character name.')
             .setRequired(false))
         .addStringOption(rarity =>
             rarity.setName('rarity')
@@ -96,9 +106,15 @@ module.exports = {
             tradebox: interaction.options.getString('tradebox')
         };
 
+        const sort = interaction.options.getString('sort');
         const stacking = interaction.options.getString('stacking') === 'yes';
-        const cards = await DbUserCards.findFilteredUserCards(interaction.user.id, filters);
+
+        let cards = await DbUserCards.findFilteredUserCards(interaction.user.id, filters);
         if(!cards || !cards.length) return interaction.editReply(`You have no cards with the applied filters.`);
+
+        if(sort) {
+            cards = DbUserCards.sortCards(cards, sort);
+        }
 
         const cardList = [];
         const msgList = [];        
