@@ -13,16 +13,18 @@ const cardDimensions = {
 async function loadAssets(){
     // Load all card images
     for(const card of cardData) {
-        assets[card.id] = {};
-        const dir = await fs.readdirSync(`./Assets/Cards/${card.id}`);
-        for(const file of dir) {
-            if(file.length != 12) throw Error('File name is not in correct format.');
-            const cardName = file.replace(card.id, "");
-            const cardId = cardName.replace(".png", "");
-            const fullId = `${cardId.toUpperCase()}.png`;
-            assets[card.id][fullId] = await Canvas.loadImage(`./Assets/Cards/${card.id}/${file}`);
+        if (card.id) {
+            assets[card.id] = {};
+            const dir = await fs.readdirSync(`./Assets/Cards/${card.id}`);
+            for(const file of dir) {
+                if(file.length != 12) throw Error('File name is not in correct format.');
+                const cardName = file.replace(card.id, "");
+                const cardId = cardName.replace(".png", "");
+                const fullId = `${cardId.toUpperCase()}.png`;
+                assets[card.id][fullId] = await Canvas.loadImage(`./Assets/Cards/${card.id}/${file}`);
+            }
+            console.log("finished loading cards assets.");
         }
-        console.log("finished loading cards assets.");
     }
 }
 

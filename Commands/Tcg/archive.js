@@ -82,7 +82,7 @@ module.exports = {
         const filteredTypes = filters.type ? [filters.type] : types;
         const filteredHolos = filters.holo ? [filters.holo] : holos;
         const filteredFirsts = filters.first ? [filters.first] : firstEditions;
-        const cards = filters.name ? CardData.filter( card => card.name.toLowerCase() === filters.name.toLowerCase() ) : CardData;
+        const cards = filters.name ? CardData.filter( card => card.name?.toLowerCase() === filters.name.toLowerCase() ) : CardData;
 
         if( !cards.length ) {
             return interaction.editReply("There are no cards to show.");
@@ -93,12 +93,28 @@ module.exports = {
         let count = 0;
         let page = 0;
 
+        const userCards = await DbUserCards.findFilteredUserCards(interaction.user.id, filters);
+        const cardCounts = {};
+        for (const card of userCards) {
+            if (cardCounts[card.card_name]) {
+                cardCounts[card.card_name]++;
+            } else {
+                cardCounts[card.card_name] = 1;
+            }
+        }
+
+        let ownedCount = 0;
+        let totalCount = 0;
+
         for (let i = 0; i < cards.length; i++) {
-            for (const rarity of filteredRarities) {    
+            if(!cards[i]?.id) { continue; }
+            let availableRarities = filteredRarities.filter( rarity => !cards[i].bannedRarities.includes(rarity));
+            for (const rarity of availableRarities) {    
                 for (const type of filteredTypes) {
                     for(const holo of filteredHolos) {
                         for(const firstEdition of filteredFirsts ) {
                             count++;
+                            totalCount++;
                             if(count >= 25) {
                                 selectionList.push([]);
                                 page++;
@@ -110,8 +126,9 @@ module.exports = {
                                 cards[i].emote, 
                                 rarity, 
                                 type === 'G', type === 'S', holo === 'H', firstEdition === '1',
-                                user.archive.includes(id)
+                                cardCounts[id] ?? 0
                             );
+                            if (cardCounts[id]) ownedCount++;
                             selectionList[page] += `${msg}\n`;
                         }
                     }
@@ -119,8 +136,11 @@ module.exports = {
             }
         }
 
+        const percentOwned = Math.round((ownedCount / totalCount) * 100);
+        const preText = `__You have collected **${ownedCount}** out of **${totalCount}** available cards! **(${percentOwned}%)**__\n\n`;
+
         const collector = new CustomCollector(interaction, {}, async() => {});
-        collector.addEmbedPages('Your Archive', selectionList);
+        collector.addEmbedPages('Your Archive', selectionList, preText);
         await collector.start();
     }
 }

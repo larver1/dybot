@@ -2,6 +2,7 @@
     {
         "name": "Dyron",
         "id": "0001",
+        "bannedRarities": [],
         "emote": "<:dyron:1458186498003177472>",
         "stats": {
             "atk": 28,
@@ -13,6 +14,7 @@
     {
         "name": "Satono",
         "id": "0002",
+        "bannedRarities": [],
         "emote": "<:satono:1458186503481065503>",
         "stats": {
             "atk": 15,
@@ -24,12 +26,63 @@
     {
         "name": "Larver",
         "id": "0003",
+        "bannedRarities": [],
         "emote": "<:oli:1458186500763029546>",
         "stats": {
             "atk": 0,
             "def": 0,
             "hp": 0,
             "luck": 105
+        }
+    },
+    {
+    },
+    {
+        "name": "Corax",
+        "id": "0005",
+        "bannedRarities": ["Uncommon", "Rare", "Legendary", "Mythical"],
+        "emote": "<:corax:1488628023749251233>",
+        "stats": {
+            "atk": 0,
+            "def": 0,
+            "hp": 0,
+            "luck": 0
+        }
+    },
+    {
+        "name": "RGPL",
+        "id": "0006",
+        "bannedRarities": ["Uncommon", "Rare", "Legendary", "Mythical"],
+        "emote": "<:rgpl:1488628127650549933>",
+        "stats": {
+            "atk": 0,
+            "def": 0,
+            "hp": 0,
+            "luck": 0
+        }
+    },
+    {
+        "name": "Ravynx",
+        "id": "0007",
+        "bannedRarities": ["Uncommon", "Rare", "Legendary", "Mythical"],
+        "emote": "<:ravynx:1488628219887227062>",
+        "stats": {
+            "atk": 0,
+            "def": 0,
+            "hp": 0,
+            "luck": 0
+        }
+    },
+    {
+        "name": "Kebabuss",
+        "id": "0008",
+        "bannedRarities": ["Uncommon", "Rare", "Legendary", "Mythical"],
+        "emote": "<:kebabuss:1488628379170373812>",
+        "stats": {
+            "atk": 0,
+            "def": 0,
+            "hp": 0,
+            "luck": 0
         }
     }
 ]

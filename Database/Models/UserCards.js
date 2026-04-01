@@ -65,21 +65,21 @@ module.exports = (sequelize, DataTypes) => {
 		name: {
 			type: DataTypes.STRING,
 			get() {
-				return CardData[parseInt(this.dex_id) - 1].name;
+				return CardData[this.dex_id - 1].name;
 			}
 		},
 		// Emoji
 		emoji: {
 			type: DataTypes.STRING,
 			get() {
-				return CardData[parseInt(this.dex_id) - 1].emote;
+				return CardData[this.dex_id - 1].emote;
 			}
 		},
 		// Card Data
 		data: {
 			type: DataTypes.JSON,
 			get() {
-				return CardData[parseInt(this.dex_id) - 1];
+				return CardData[this.dex_id - 1];
 			}
 		},
 		card_name: {
