@@ -42,7 +42,7 @@ module.exports = class DbUserCards {
      * @returns 
      */
     static findCardByName(name) {
-        return CardData.find(card => card.name.toLowerCase() === name.toLowerCase());
+        return CardData.find(card => card.name?.toLowerCase() === name.toLowerCase());
     }
 
 	/**

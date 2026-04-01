@@ -161,11 +161,12 @@ module.exports = class CustomCollector {
      * Displays an embed with changing descriptions on each page
      * @param {String} title - Embed title 
      * @param {Array} descriptionList - List of descriptions to display depending on page number 
+     * @param {String} preText - Common text to put at front of every page description
      */
-    addEmbedPages(title, descriptionList) {
+    addEmbedPages(title, descriptionList, preText) {
         this.page = 0;
         this.maxPages = descriptionList.length;
-        const embed = this.addEmbed(`[Page ${this.page + 1}/${this.maxPages}] ${title}`, descriptionList[this.page]);
+        const embed = this.addEmbed(`[Page ${this.page + 1}/${this.maxPages}] ${title}`, `${preText ?? ''}${descriptionList[this.page]}`);
         embed.descriptionList = descriptionList;
         
         if(descriptionList.length > 1) {
@@ -180,7 +181,7 @@ module.exports = class CustomCollector {
                     const embedIndex = this.embeds.findIndex(currentEmbed => currentEmbed.customId == embed.customId);
                     this.embeds[embedIndex]
                         .setTitle(`[Page ${this.page + 1}/${this.maxPages}] ${title}`)
-                        .setDescription(embed.descriptionList[this.page])
+                        .setDescription(`${preText ?? ''}${embed.descriptionList[this.page]}`)
 
                     this.message = await this.interaction.editReply({ content: ` `, embeds: this.embeds, components: this.components }).catch(e => console.error(e));   
                 }, prevPageEmoji),
@@ -193,7 +194,7 @@ module.exports = class CustomCollector {
                     const embedIndex = this.embeds.findIndex(currentEmbed => currentEmbed.customId == embed.customId);
                     this.embeds[embedIndex]
                         .setTitle(`[Page ${this.page + 1}/${this.maxPages}] ${title}`)
-                        .setDescription(embed.descriptionList[this.page])
+                        .setDescription(`${preText ?? ''}${embed.descriptionList[this.page]}`)
 
                     this.message = await this.interaction.editReply({ content: ` `, embeds: this.embeds, components: this.components }).catch(e => console.error(e));  
                 }, nextPageEmoji)

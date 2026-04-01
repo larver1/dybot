@@ -281,9 +281,10 @@ module.exports = class MessageHelper {
 		return viewOrderEmbed;
 	}
 
-	static displayArchiveCard(name, emoji, rarity, gold, star, holo, first, owned) {
-		const msg = `${owned ? '✅' : '❌'}${name} (${rarity})`;
-		return `${emoji} \`${msg}${MessageHelper.padString(msg, 20)} ${first ? '1️⃣' : ''}${gold ? '🪙' : ''}${star ? '🌠' : ''}${holo ? '🌈' : ''}\``;
+	static displayArchiveCard(name, emoji, rarity, gold, star, holo, first, numOwned) {
+		const numOwnedMsg = `${MessageHelper.padString(numOwned.toString(), 3)}${numOwned}`;
+		const msg = `${numOwned ? `✅` : '❌'}${numOwnedMsg} ${name} (${rarity})`;
+		return `${emoji} \`${msg}${MessageHelper.padString(msg, 30)} ${first ? '1️⃣' : ''}${gold ? '🪙' : ''}${star ? '🌠' : ''}${holo ? '🌈' : ''}\``;
 	}
 
 	static displayCardList(cards, infoText, countList) {

@@ -10,7 +10,7 @@ module.exports = class CardBuilder {
      * @param {number} slot
      */
     static rollRarity(slot) {
-        const rand = Math.random();
+        let rand = Math.random();
         switch(slot) {
             case 1:
             case 2:
@@ -77,9 +77,11 @@ module.exports = class CardBuilder {
      * Choose a random card of a given rarity
      * @param {number} slot 
      */
-    static pullCard(slot) {        
-        const card = {...cardTypes[Math.floor(Math.random() * cardTypes.length)]};
-        card.rarity = this.rollRarity(slot);
+    static pullCard(slot) {    
+        const rarity = this.rollRarity(slot);    
+        const filteredCards = [...cardTypes.filter( card => card.id && !card.bannedRarities.includes(rarity))];
+        const card = {...filteredCards[Math.floor(Math.random() * filteredCards.length)]};
+        card.rarity = rarity;
         card.details = this.rollGoldStarHolo( card.rarity);
         return card;
     }
