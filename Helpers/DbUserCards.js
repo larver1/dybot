@@ -94,6 +94,18 @@ module.exports = class DbUserCards {
         return UserCards.findAll({ where: query });
     }
 
+    static getCardCounts(cards) {
+        const cardCounts = {};
+        for (const card of cards) {
+            if (cardCounts[card.card_name]) {
+                cardCounts[card.card_name]++;
+            } else {
+                cardCounts[card.card_name] = 1;
+            }
+        }
+        return cardCounts;
+    }
+
     static sortCards(cards, sortType) {
         switch(sortType) {
             case "amount": 
@@ -163,6 +175,7 @@ module.exports = class DbUserCards {
         if(!user.archive.includes(`${dbCard.card_name},`)) {
             user.archive += `${dbCard.card_name},`;
             await user.save();
+            dbCard.newCard = true;
         }
 
         return dbCard;

@@ -45,10 +45,13 @@ module.exports = {
             renders[renders.length - 1].msg = MessageHelper.displayCardList([newCard], "");
         }
 
+        const userCards = await DbUserCards.findFilteredUserCards(interaction.user.id, {});
+        const cardCounts = DbUserCards.getCardCounts(userCards);
+
         const fullImage = new CardsView(interaction, fullImages);
         await fullImage.createCards();
         const canvas = fullImage.getCards();
-        canvas.msg = MessageHelper.displayCardList(fullImages, "");
+        canvas.msg = MessageHelper.displayPulledCards(fullImages, "", cardCounts);
         renders.push(canvas);
         await user.resetPackTimer();
 

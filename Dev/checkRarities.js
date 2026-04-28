@@ -7,7 +7,7 @@ const stats = {
     "Mythical": { holo: 0, star: 0, gold: 0, normal: 0, count: 0},
 }
 
-for (let i = 0; i < 100000000; i++ ) {
+for (let i = 0; i < 1000000; i++ ) {
     const pack = CardBuilder.openPack();
     for ( const card of pack ) {
         if ( card.details.holo ) { stats[card.rarity].holo++; }

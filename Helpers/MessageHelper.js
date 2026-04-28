@@ -1,6 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const CustomEmbed = require('../Helpers/CustomEmbed.js');
 const DbOrder = require('../Helpers/DbOrder.js');
+const CardBuilder = require('../Helpers/CardBuilder.js');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, inlineCode } = require('discord.js');
 const tickEmoji = "<a:tick:886245262169866260>";
 const crossEmoji = "<a:cross:886245292339515412>";
@@ -283,9 +284,34 @@ module.exports = class MessageHelper {
 
 	static displayArchiveCard(name, emoji, rarity, gold, star, holo, first, numOwned) {
 		const numOwnedMsg = `${MessageHelper.padString(numOwned.toString(), 3)}${numOwned}`;
-		const msg = `${numOwned ? `✅` : '❌'}${numOwnedMsg} ${name} (${rarity})`;
+		const pullRate = (CardBuilder.calculatePullOdds({ rarity, gold, star, holo }) * 100).toFixed(2);
+		const pullRateMsg = `${MessageHelper.padString(pullRate.toString(), 6)}${pullRate}%`;
+		const msg = `${numOwned ? `✅` : '❌'}${numOwnedMsg} ${pullRateMsg} ${name} (${rarity})`;
 		return `${emoji} \`${msg}${MessageHelper.padString(msg, 30)} ${first ? '1️⃣' : ''}${gold ? '🪙' : ''}${star ? '🌠' : ''}${holo ? '🌈' : ''}\``;
 	}
+	
+	static displayPulledCards(cards, infoText, countList) {
+        let msg = `${infoText}\n\n`;
+		for(let i = 0; i < cards.length; i++) {
+			const card = cards[i];
+			const details = `${card.name} (${card.rarity})`;
+			const lvl = `lvl.${card.lvl}`;
+			let num = i + 1;
+			let separator = '.';
+			if (countList) {
+				num = countList[card.card_name];
+				separator = 'x';
+			}
+			const pullRate = (CardBuilder.calculatePullOdds(card) * 100).toFixed(2);
+			const pullRateMsg = `${MessageHelper.padString(pullRate.toString(), 8)}(${pullRate}%)`;
+			if (num === 1) { msg += "You pulled a new card!\n"}
+			msg += `${card.emoji} ${inlineCode(`${num}${separator}${num <= 9 ? ' ' : ''} ${details}${MessageHelper.padString(details, 30, true)}: ${lvl}${MessageHelper.extraPadding(lvl, 8)}${pullRateMsg}${card.desc}${MessageHelper.extraPadding(card.desc, 5)}`)}`;
+			if (num > 1) { msg += `(owned: ${num})` };
+			msg += "\n";
+		}
+
+        return msg;
+    };
 
 	static displayCardList(cards, infoText, countList) {
         let msg = `${infoText}\n\n`;

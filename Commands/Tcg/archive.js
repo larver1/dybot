@@ -94,20 +94,14 @@ module.exports = {
         let page = 0;
 
         const userCards = await DbUserCards.findFilteredUserCards(interaction.user.id, filters);
-        const cardCounts = {};
-        for (const card of userCards) {
-            if (cardCounts[card.card_name]) {
-                cardCounts[card.card_name]++;
-            } else {
-                cardCounts[card.card_name] = 1;
-            }
-        }
+        const cardCounts = DbUserCards.getCardCounts(userCards);
 
         let ownedCount = 0;
         let totalCount = 0;
 
         for (let i = 0; i < cards.length; i++) {
             if(!cards[i]?.id) { continue; }
+            const dexId = parseInt(cards[i].id);
             let availableRarities = filteredRarities.filter( rarity => !cards[i].bannedRarities.includes(rarity));
             for (const rarity of availableRarities) {    
                 for (const type of filteredTypes) {
@@ -120,7 +114,7 @@ module.exports = {
                                 page++;
                                 count = 0;
                             } 
-                            let id = `${i+1}${rarity[0]}${type}${holo}${firstEdition}`;
+                            let id = `${dexId}${rarity[0]}${type}${holo}${firstEdition}`;
                             const msg = MessageHelper.displayArchiveCard(
                                 cards[i].name, 
                                 cards[i].emote, 
